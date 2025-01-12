@@ -101,16 +101,16 @@ cbor_1_minor_x(29, nwf(61)) --> [].
 cbor_1_minor_x(30, nwf(62)) --> [].
 cbor_1_minor_x(31, nwf(63)) --> [].
 
-cbor_2_minor_x(00, bytes(X)) --> numbytes_list(0, X).
-cbor_2_minor_x(01, bytes(X)) --> numbytes_list(1, X).
-cbor_2_minor_x(02, bytes(X)) --> numbytes_list(2, X).
-cbor_2_minor_x(03, bytes(X)) --> numbytes_list(3, X).
-cbor_2_minor_x(04, bytes(X)) --> numbytes_list(4, X).
-cbor_2_minor_x(05, bytes(X)) --> numbytes_list(5, X).
-cbor_2_minor_x(06, bytes(X)) --> numbytes_list(6, X).
-cbor_2_minor_x(07, bytes(X)) --> numbytes_list(7, X).
-cbor_2_minor_x(08, bytes(X)) --> numbytes_list(8, X).
-cbor_2_minor_x(09, bytes(X)) --> numbytes_list(9, X).
+cbor_2_minor_x( 0, bytes(X)) --> numbytes_list( 0, X).
+cbor_2_minor_x( 1, bytes(X)) --> numbytes_list( 1, X).
+cbor_2_minor_x( 2, bytes(X)) --> numbytes_list( 2, X).
+cbor_2_minor_x( 3, bytes(X)) --> numbytes_list( 3, X).
+cbor_2_minor_x( 4, bytes(X)) --> numbytes_list( 4, X).
+cbor_2_minor_x( 5, bytes(X)) --> numbytes_list( 5, X).
+cbor_2_minor_x( 6, bytes(X)) --> numbytes_list( 6, X).
+cbor_2_minor_x( 7, bytes(X)) --> numbytes_list( 7, X).
+cbor_2_minor_x( 8, bytes(X)) --> numbytes_list( 8, X).
+cbor_2_minor_x( 9, bytes(X)) --> numbytes_list( 9, X).
 cbor_2_minor_x(10, bytes(X)) --> numbytes_list(10, X).
 cbor_2_minor_x(11, bytes(X)) --> numbytes_list(11, X).
 cbor_2_minor_x(12, bytes(X)) --> numbytes_list(12, X).
