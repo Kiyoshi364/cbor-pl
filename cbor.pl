@@ -4,9 +4,9 @@
 
 :- use_module(library(dcgs), []).
 :- use_module(library(clpz), [
-  (#)/1, (#=)/2,
+  (#<)/2, (#=)/2,
   op(700, xfx, #=),
-  op(150, xfx, #)
+  op(150, fx, #)
 ]).
 
 :- initialization(assertz(clpz:monotonic)).
@@ -148,7 +148,7 @@ numberbytes_list(N, L) -->
   ( { #N #= 0,
       L = []
     }
-  ; { #N #> 0,
+  ; { 0 #< #N,
       #N1 #= N - 1,
       L = [Byte | L1]
     },
@@ -163,7 +163,7 @@ peanobytes_list(s(P), [Byte | L]) -->
 
 peano_number(z, 0).
 peano_number(s(P), N1) :-
-  #N1 #> 0,
+  0 #< #N1,
   #N1 #= #N + 1,
   peano_number(P, N).
 
