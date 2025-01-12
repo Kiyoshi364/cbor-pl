@@ -139,35 +139,35 @@ numbytes_number(N, X) --> { number_peano(N, P) }, peanobytes_number(P, X).
 numbytes_list(N, L) --> numberbytes_list(N, L).
 
 peanobytes_number(P, X) --> peanobytes_number(P, 0, X).
-peanobytes_number(z, X, X) --> [].
-peanobytes_number(s(P), X0, X) -->
+peanobytes_number([], X, X) --> [].
+peanobytes_number([_ | P], X0, X) -->
   [Byte],
   { #X1 #= (#X0 << 8) \/ #Byte },
   peanobytes_number(P, X1, X).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 
-number_peano(0, z).
-number_peano(1, s(z)).
-number_peano(2, s(s(z))).
-number_peano(3, s(s(s(z)))).
-number_peano(4, s(s(s(s(z))))).
-number_peano(5, s(s(s(s(s(z)))))).
-number_peano(6, s(s(s(s(s(s(z))))))).
-number_peano(7, s(s(s(s(s(s(s(z)))))))).
-number_peano(8, s(s(s(s(s(s(s(s(z))))))))).
-number_peano(9, s(s(s(s(s(s(s(s(s(z)))))))))).
-number_peano(10, s(s(s(s(s(s(s(s(s(s(z))))))))))).
-number_peano(11, s(s(s(s(s(s(s(s(s(s(s(z)))))))))))).
-number_peano(12, s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))).
-number_peano(13, s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))).
-number_peano(14, s(s(s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))))).
-number_peano(15, (s(s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))))).
-number_peano(16, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))))))).
-number_peano(17, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))))))).
-number_peano(18, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))))))))).
-number_peano(19, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))))))))).
-number_peano(20, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))))))))))).
-number_peano(21, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))))))))))).
-number_peano(22, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z))))))))))))))))))))))).
-number_peano(23, s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(z)))))))))))))))))))))))).
+number_peano( 0, "").
+number_peano( 1, "s").
+number_peano( 2, "ss").
+number_peano( 3, "sss").
+number_peano( 4, "ssss").
+number_peano( 5, "sssss").
+number_peano( 6, "ssssss").
+number_peano( 7, "sssssss").
+number_peano( 8, "ssssssss").
+number_peano( 9, "sssssssss").
+number_peano(10, "ssssssssss").
+number_peano(11, "sssssssssss").
+number_peano(12, "ssssssssssss").
+number_peano(13, "sssssssssssss").
+number_peano(14, "ssssssssssssss").
+number_peano(15, "sssssssssssssss").
+number_peano(16, "ssssssssssssssss").
+number_peano(17, "sssssssssssssssss").
+number_peano(18, "ssssssssssssssssss").
+number_peano(19, "sssssssssssssssssss").
+number_peano(20, "ssssssssssssssssssss").
+number_peano(21, "sssssssssssssssssssss").
+number_peano(22, "ssssssssssssssssssssss").
+number_peano(23, "sssssssssssssssssssssss").
