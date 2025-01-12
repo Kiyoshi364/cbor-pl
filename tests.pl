@@ -55,6 +55,28 @@ test_item_500_bytes :-
   X == bytes(Payload),
 true.
 
+nwdet(test_item_small_ascii_text).
+test_item_small_ascii_text :-
+  Text = "ascii rules!",
+  maplist(char_code, Text, Payload),
+  maplist(char_code, "\x6c\", Header),
+  append(Header, Payload, In),
+  phrase(cbor_item(X), In),
+  X == text(Text),
+true.
+
+nwdet(test_item_medium_ascii_text).
+test_item_medium_ascii_text :-
+  Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
+  maplist(char_code, Text, Payload),
+  maplist(char_code, "\x78\\x31\", Header),
+  append(Header, Payload, In),
+  phrase(cbor_item(X), In),
+  X == text(Text),
+true.
+
+% TODO: add tests for utf8 text
+
 run_tests :-
   ( findall(T,
       ( T = M:P,

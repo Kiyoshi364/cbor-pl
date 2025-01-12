@@ -135,8 +135,43 @@ cbor_2_minor_x(29, nwf(93)) --> [].
 cbor_2_minor_x(30, nwf(94)) --> [].
 cbor_2_minor_x(31, not_implemented) --> []. % TODO
 
+cbor_3_minor_x( 0, text(X)) --> numbytes_text( 0, X).
+cbor_3_minor_x( 1, text(X)) --> numbytes_text( 1, X).
+cbor_3_minor_x( 2, text(X)) --> numbytes_text( 2, X).
+cbor_3_minor_x( 3, text(X)) --> numbytes_text( 3, X).
+cbor_3_minor_x( 4, text(X)) --> numbytes_text( 4, X).
+cbor_3_minor_x( 5, text(X)) --> numbytes_text( 5, X).
+cbor_3_minor_x( 6, text(X)) --> numbytes_text( 6, X).
+cbor_3_minor_x( 7, text(X)) --> numbytes_text( 7, X).
+cbor_3_minor_x( 8, text(X)) --> numbytes_text( 8, X).
+cbor_3_minor_x( 9, text(X)) --> numbytes_text( 9, X).
+cbor_3_minor_x(10, text(X)) --> numbytes_text(10, X).
+cbor_3_minor_x(11, text(X)) --> numbytes_text(11, X).
+cbor_3_minor_x(12, text(X)) --> numbytes_text(12, X).
+cbor_3_minor_x(13, text(X)) --> numbytes_text(13, X).
+cbor_3_minor_x(14, text(X)) --> numbytes_text(14, X).
+cbor_3_minor_x(15, text(X)) --> numbytes_text(15, X).
+cbor_3_minor_x(16, text(X)) --> numbytes_text(16, X).
+cbor_3_minor_x(17, text(X)) --> numbytes_text(17, X).
+cbor_3_minor_x(18, text(X)) --> numbytes_text(18, X).
+cbor_3_minor_x(19, text(X)) --> numbytes_text(19, X).
+cbor_3_minor_x(20, text(X)) --> numbytes_text(20, X).
+cbor_3_minor_x(21, text(X)) --> numbytes_text(21, X).
+cbor_3_minor_x(22, text(X)) --> numbytes_text(22, X).
+cbor_3_minor_x(23, text(X)) --> numbytes_text(23, X).
+cbor_3_minor_x(24, text(X)) --> numbytes_number(1, N), numberbytes_text(N, X).
+cbor_3_minor_x(25, text(X)) --> numbytes_number(2, N), numberbytes_text(N, X).
+cbor_3_minor_x(26, text(X)) --> numbytes_number(4, N), numberbytes_text(N, X).
+cbor_3_minor_x(27, text(X)) --> numbytes_number(8, N), numberbytes_text(N, X).
+% Not well-formed: 0x60 + 28 = 124
+cbor_3_value_x(28, nwf(124)) --> [].
+cbor_3_value_x(29, nwf(125)) --> [].
+cbor_3_value_x(30, nwf(126)) --> [].
+cbor_3_value_x(31, not_implemented) --> []. % TODO
+
 numbytes_number(N, X) --> { number_peano(N, P) }, peanobytes_number(P, X).
 numbytes_list(N, L) --> numberbytes_list(N, L).
+numbytes_text(N, X) --> { number_peano(N, P) }, peanobytes_text(P, X).
 
 peanobytes_number(P, X) --> peanobytes_number(P, 0, X).
 peanobytes_number([], X, X) --> [].
@@ -146,6 +181,27 @@ peanobytes_number([_ | P], X0, X) -->
   peanobytes_number(P, X1, X).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
+
+numberbytes_text(N, T) --> numberbytes_text(N, utf8_begin, T).
+numberbytes_text(N0, S0, T) -->
+  ( { #N0 #= 0, S0 = utf8_begin, T = [] }
+  ; { 0 #< #N0, #N #= #N0 - 1 },
+    [Byte],
+    { utf8_state_byte_next(S0, Byte, S, T, T1) },
+    numberbytes_text(N, S, T1)
+  ).
+
+peanobytes_text(P, T) --> peanobytes_text(P, utf8_begin, T).
+peanobytes_text([], utf8_begin, []) --> [].
+peanobytes_text([_ | P], S0, T) -->
+  [Byte],
+  { utf8_state_byte_next(S0, Byte, S, T, T1) },
+  peanobytes_text(P, S, T1).
+
+% TODO: only implemented for simple case: ascii only
+utf8_state_byte_next(utf8_begin, Byte, utf8_begin, [Char | T], T) :-
+  #Byte #< 0x80,
+  char_code(Char, Byte).
 
 number_peano( 0, "").
 number_peano( 1, "s").
