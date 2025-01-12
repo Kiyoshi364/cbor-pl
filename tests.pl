@@ -67,7 +67,7 @@ run_tests :-
     )
   ; Ts = []
   ),
-  foldl(run_test, Ts, t(0, 0, 0, 0), t(Np, Nf, Nd, Nds)),
+  foldl(run_test, Ts, t(0, 0, 0, 0, 0), t(Np, Nf, Nd, Nds, Nt)),
   ( (Nf > 0 ; Nd > 0) -> nl; true ),
   ( Nf > 0 ->
     write(Nf), writen(' tests failed!')
@@ -85,11 +85,14 @@ run_tests :-
     write(Nds), writen(' tests not well-behaved deterministic supreessed.')
   ; true
   ),
+  ( Nt == Np -> ExitCode = 0 ; ExitCode = 1 ),
+  halt(ExitCode),
 true.
 
 :- meta_predicate(run_test(0, ?, ?)).
 
-run_test(Test, t(Np0, Nf0, Nd0, Nds0), t(Np, Nf, Nd, Nds)) :-
+run_test(Test, t(Np0, Nf0, Nd0, Nds0, Nt0), t(Np, Nf, Nd, Nds, Nt)) :-
+  Nt is Nt0 + 1,
   catch(
     ( call_cleanup(Test, Result = pass) ; Result = failed ),
     Err,
