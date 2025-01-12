@@ -60,7 +60,7 @@ cbor_0_minor_x(24, uint( X)) --> numbytes_number(1, X).
 cbor_0_minor_x(25, uint( X)) --> numbytes_number(2, X).
 cbor_0_minor_x(26, uint( X)) --> numbytes_number(4, X).
 cbor_0_minor_x(27, uint( X)) --> numbytes_number(8, X).
-% Not well-formed
+% Not well-formed: 0x00 + 28 = 28
 cbor_0_minor_x(28, nwf(28)) --> [].
 cbor_0_minor_x(29, nwf(29)) --> [].
 cbor_0_minor_x(30, nwf(30)) --> [].
@@ -94,11 +94,11 @@ cbor_1_minor_x(24, int(  X)) --> { #X #= \ #X0 }, numbytes_number(1, X0).
 cbor_1_minor_x(25, int(  X)) --> { #X #= \ #X0 }, numbytes_number(2, X0).
 cbor_1_minor_x(26, int(  X)) --> { #X #= \ #X0 }, numbytes_number(4, X0).
 cbor_1_minor_x(27, int(  X)) --> { #X #= \ #X0 }, numbytes_number(8, X0).
-% Not well-formed
-cbor_1_minor_x(28, nwf(28)) --> [].
-cbor_1_minor_x(29, nwf(29)) --> [].
-cbor_1_minor_x(30, nwf(30)) --> [].
-cbor_1_minor_x(31, nwf(31)) --> [].
+% Not well-formed: 0x20 + 28 = 60
+cbor_1_minor_x(28, nwf(60)) --> [].
+cbor_1_minor_x(29, nwf(61)) --> [].
+cbor_1_minor_x(30, nwf(62)) --> [].
+cbor_1_minor_x(31, nwf(63)) --> [].
 
 cbor_2_minor_x(00, bytes(X)) --> numbytes_list(0, X).
 cbor_2_minor_x(01, bytes(X)) --> numbytes_list(1, X).
@@ -128,11 +128,11 @@ cbor_2_minor_x(24, bytes(X)) --> numbytes_number(1, N), numberbytes_list(N, X).
 cbor_2_minor_x(25, bytes(X)) --> numbytes_number(2, N), numberbytes_list(N, X).
 cbor_2_minor_x(26, bytes(X)) --> numbytes_number(4, N), numberbytes_list(N, X).
 cbor_2_minor_x(27, bytes(X)) --> numbytes_number(8, N), numberbytes_list(N, X).
-% Not well-formed
-cbor_2_minor_x(28, nwf(28)) --> [].
-cbor_2_minor_x(29, nwf(29)) --> [].
-cbor_2_minor_x(30, nwf(30)) --> [].
-cbor_2_minor_x(31, nwf(31)) --> [].
+% Not well-formed: 0x40 + 28 = 92
+cbor_2_minor_x(28, nwf(92)) --> [].
+cbor_2_minor_x(29, nwf(93)) --> [].
+cbor_2_minor_x(30, nwf(94)) --> [].
+cbor_2_minor_x(31, not_implemented) --> []. % TODO
 
 numbytes_number(N, X) --> { number_peano(N, P) }, peanobytes_number(P, X).
 numbytes_list(N, L) --> { number_peano(N, P) }, peanobytes_list(P, L).
