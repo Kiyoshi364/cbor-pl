@@ -16,32 +16,32 @@ nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
 test_item_10 :-
-  atom_codes('\x0a\', In),
+  maplist(char_code, "\x0a\", In),
   phrase(cbor_item(X), In),
   X == uint(10),
 true.
 
 test_item_500 :-
-  atom_codes('\x19\\x01\\xf4\', In),
+  maplist(char_code, "\x19\\x01\\xf4\", In),
   phrase(cbor_item(X), In),
   X == uint(500),
 true.
 
 test_item_negative_10 :-
-  atom_codes('\x29\', In),
+  maplist(char_code, "\x29\", In),
   phrase(cbor_item(X), In),
   X == int(-10),
 true.
 
 test_item_negative_500 :-
-  atom_codes('\x39\\x01\\xf3\', In),
+  maplist(char_code, "\x39\\x01\\xf3\", In),
   phrase(cbor_item(X), In),
   X == int(-500),
 true.
 
 test_item_5_bytes :-
   length(Payload, 5),
-  atom_codes('\x45\', Header),
+  maplist(char_code, "\x45\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(Payload),
@@ -49,7 +49,7 @@ true.
 
 test_item_500_bytes :-
   length(Payload, 500),
-  atom_codes('\x59\\x01\\xf4\', Header),
+  maplist(char_code, "\x59\\x01\\xf4\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(Payload),
