@@ -2,12 +2,13 @@
   cbor_item//1, cbor//1
 ]).
 
-:- use_module(library(dcgs), []).
+:- use_module(library(dcgs), [seq//1]).
 :- use_module(library(clpz), [
   (#<)/2, (#=)/2,
   op(700, xfx, #=),
   op(150, fx, #)
 ]).
+:- use_module(library(lists), [length/2]).
 
 :- initialization(assertz(clpz:monotonic)).
 
@@ -135,7 +136,7 @@ cbor_2_minor_x(30, nwf(94)) --> [].
 cbor_2_minor_x(31, not_implemented) --> []. % TODO
 
 numbytes_number(N, X) --> { number_peano(N, P) }, peanobytes_number(P, X).
-numbytes_list(N, L) --> { number_peano(N, P) }, peanobytes_list(P, L).
+numbytes_list(N, L) --> numberbytes_list(N, L).
 
 peanobytes_number(P, X) --> peanobytes_number(P, 0, X).
 peanobytes_number(z, X, X) --> [].
@@ -144,28 +145,7 @@ peanobytes_number(s(P), X0, X) -->
   { #X1 #= (#X0 << 8) \/ #Byte },
   peanobytes_number(P, X1, X).
 
-numberbytes_list(N, L) -->
-  ( { #N #= 0,
-      L = []
-    }
-  ; { 0 #< #N,
-      #N1 #= N - 1,
-      L = [Byte | L1]
-    },
-    [Byte],
-    numberbytes_list(N1, L1)
-  ).
-
-peanobytes_list(z, []) --> [].
-peanobytes_list(s(P), [Byte | L]) -->
-  [Byte],
-  peanobytes_list(P, L).
-
-peano_number(z, 0).
-peano_number(s(P), N1) :-
-  0 #< #N1,
-  #N1 #= #N + 1,
-  peano_number(P, N).
+numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 
 number_peano(0, z).
 number_peano(1, s(z)).

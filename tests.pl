@@ -47,7 +47,6 @@ test_item_5_bytes :-
   X == bytes(Payload),
 true.
 
-nwdet(test_item_500_bytes).
 test_item_500_bytes :-
   length(Payload, 500),
   atom_codes('\x59\\x01\\xf4\', Header),
