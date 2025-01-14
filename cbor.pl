@@ -101,14 +101,10 @@ cbor_3_value_x(reserved(29), nwf(125)) --> [].
 cbor_3_value_x(reserved(30), nwf(126)) --> [].
 cbor_3_value_x(indefinite, not_implemented) --> []. % TODO
 
-numbytes_number(N, X) --> { number_peano(N, P) }, peanobytes_number(P, X).
-
-peanobytes_number(P, X) --> peanobytes_number(P, 0, X).
-peanobytes_number([], X, X) --> [].
-peanobytes_number([_ | P], X0, X) -->
-  [Byte],
-  { #X1 #= (#X0 << 8) \/ #Byte },
-  peanobytes_number(P, X1, X).
+numbytes_number(1, X) --> [X].
+numbytes_number(2, X) --> { N = 1, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(4, X) --> { N = 2, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(8, X) --> { N = 4, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 
@@ -125,8 +121,3 @@ numberbytes_text(N0, S0, T) -->
 utf8_state_byte_next(utf8_begin, Byte, utf8_begin, [Char | T], T) :-
   #Byte #< 0x80,
   char_code(Char, Byte).
-
-number_peano( 1, "s").
-number_peano( 2, "ss").
-number_peano( 4, "ssss").
-number_peano( 8, "ssssssss").
