@@ -55,10 +55,32 @@ test_item_encode_negative_10 :-
   X == int(-10),
 true.
 
+test_item_decode_negative_10 :-
+  Item = int(-10),
+  findall(Output, cbor_item(Item, Output, []), Answers),
+  Answers == [
+    [41],
+    [56, 9],
+    [57, 0, 9],
+    [58, 0, 0, 0, 9],
+    [59, 0, 0, 0, 0, 0, 0, 0, 9]
+  ],
+true.
+
 test_item_encode_negative_500 :-
   maplist(char_code, "\x39\\x01\\xf3\", In),
   phrase(cbor_item(X), In),
   X == int(-500),
+true.
+
+test_item_decode_negative_500 :-
+  Item = int(-500),
+  findall(Output, cbor_item(Item, Output, []), Answers),
+  Answers == [
+    [57, 1, 243],
+    [58, 0, 0, 1, 243],
+    [59, 0, 0, 0, 0, 0, 0, 1, 243]
+  ],
 true.
 
 test_item_encode_5_bytes :-

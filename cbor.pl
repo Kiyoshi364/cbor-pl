@@ -97,7 +97,7 @@ cbor_0_value_x(reserved(29), nwf(29)) --> [].
 cbor_0_value_x(reserved(30), nwf(30)) --> [].
 cbor_0_value_x(indefinite, nwf(31)) --> [].
 
-cbor_1_value_x(val(V), int(X)) --> { #X #< 0, #X #= \ #V }.
+cbor_1_value_x(val(V), int(X)) --> { #X #< 0, #X #= \ #V, #X + #V #= -1 }.
 % Not well-formed: 0x20 + 28 = 60
 cbor_1_value_x(reserved(28), nwf(60)) --> [].
 cbor_1_value_x(reserved(29), nwf(61)) --> [].
