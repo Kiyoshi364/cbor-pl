@@ -4,8 +4,11 @@
 
 :- use_module(library(dcgs), [seq//1]).
 :- use_module(library(clpz), [
-  (#<)/2, (#=)/2,
+  (#<)/2, (#=)/2, (in)/2,
+  op(700, xfx, #<),
   op(700, xfx, #=),
+  op(700, xfx, in),
+  op(450, xfx, ..),
   op(150, fx, #)
 ]).
 :- use_module(library(lists), [length/2]).
@@ -14,13 +17,26 @@
 
 cbor(X) --> cbor_item(X).
 
+byte( X) :- X in 0x00..0xff.
+short(X) :- X in 0x00..0xffff.
+word( X) :- X in 0x00..0xffffffff.
+quad( X) :- X in 0x00..0xffffffffffffffff.
+
+byte( X) --> {  byte(X) }, [X].
+short(X) --> { short(X) }, [X].
+word( X) --> {  word(X) }, [X].
+quad( X) --> {  quad(X) }, [X].
+
 header_major_minor(Header, Major, Minor) :-
+  Major in 0..7,
+  Minor in 0x00..0x1f,
+  #Header #= (#Major << 5) \/ #Minor,
   #Major #= #Header >> 5,
   #Minor #= #Header /\ 0x1f,
 true.
 
 cbor_major_minor(Major, Minor) -->
-  [H],
+  byte(H),
   { header_major_minor(H, Major, Minor) }.
 
 cbor_major_value(Major, Value) -->
@@ -51,10 +67,11 @@ cbor_minor_value(20, val(20)) --> [].
 cbor_minor_value(21, val(21)) --> [].
 cbor_minor_value(22, val(22)) --> [].
 cbor_minor_value(23, val(23)) --> [].
-cbor_minor_value(24, val( V)) --> numbytes_number(1, V).
-cbor_minor_value(25, val( V)) --> numbytes_number(2, V).
-cbor_minor_value(26, val( V)) --> numbytes_number(4, V).
-cbor_minor_value(27, val( V)) --> numbytes_number(8, V).
+% NOTE: {true} makes it work for decoding, possibly a bug on scryer side?
+cbor_minor_value(24, val( V)) --> {true}, numbytes_number(1, V).
+cbor_minor_value(25, val( V)) --> {true}, numbytes_number(2, V).
+cbor_minor_value(26, val( V)) --> {true}, numbytes_number(4, V).
+cbor_minor_value(27, val( V)) --> {true}, numbytes_number(8, V).
 cbor_minor_value(28, reserved(28)) --> [].
 cbor_minor_value(29, reserved(29)) --> [].
 cbor_minor_value(30, reserved(30)) --> [].
@@ -80,7 +97,7 @@ cbor_0_value_x(reserved(29), nwf(29)) --> [].
 cbor_0_value_x(reserved(30), nwf(30)) --> [].
 cbor_0_value_x(indefinite, nwf(31)) --> [].
 
-cbor_1_value_x(val(V), int(X)) --> { #X #= \ #V }.
+cbor_1_value_x(val(V), int(X)) --> { #X #< 0, #X #= \ #V }.
 % Not well-formed: 0x20 + 28 = 60
 cbor_1_value_x(reserved(28), nwf(60)) --> [].
 cbor_1_value_x(reserved(29), nwf(61)) --> [].
@@ -101,10 +118,15 @@ cbor_3_value_x(reserved(29), nwf(125)) --> [].
 cbor_3_value_x(reserved(30), nwf(126)) --> [].
 cbor_3_value_x(indefinite, not_implemented) --> []. % TODO
 
-numbytes_number(1, X) --> [X].
-numbytes_number(2, X) --> { N = 1, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
-numbytes_number(4, X) --> { N = 2, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
-numbytes_number(8, X) --> { N = 4, #X #= (#X1 << (8 * #N)) \/ #X0 }, numbytes_number(N, X1), numbytes_number(N, X0).
+cbor_4_value_x(_, not_implemented) --> []. % TODO
+cbor_5_value_x(_, not_implemented) --> []. % TODO
+cbor_6_value_x(_, not_implemented) --> []. % TODO
+cbor_7_value_x(_, not_implemented) --> []. % TODO
+
+numbytes_number(1, X) --> byte(X).
+numbytes_number(2, X) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(4, X) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 
@@ -112,7 +134,7 @@ numberbytes_text(N, T) --> numberbytes_text(N, utf8_begin, T).
 numberbytes_text(N0, S0, T) -->
   ( { #N0 #= 0, S0 = utf8_begin, T = [] }
   ; { 0 #< #N0, #N #= #N0 - 1 },
-    [Byte],
+    byte(Byte),
     { utf8_state_byte_next(S0, Byte, S, T, T1) },
     numberbytes_text(N, S, T1)
   ).

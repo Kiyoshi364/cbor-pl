@@ -15,31 +15,53 @@
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
-test_item_10 :-
+test_item_encode_10 :-
   maplist(char_code, "\x0a\", In),
   phrase(cbor_item(X), In),
   X == uint(10),
 true.
 
-test_item_500 :-
+test_item_decode_10 :-
+  Item = uint(10),
+  findall(Output, cbor_item(Item, Output, []), Answers),
+  Answers == [
+    [10],
+    [24, 10],
+    [25, 0, 10],
+    [26, 0, 0, 0, 10],
+    [27, 0, 0, 0, 0, 0, 0, 0, 10]
+  ],
+true.
+
+test_item_encode_500 :-
   maplist(char_code, "\x19\\x01\\xf4\", In),
   phrase(cbor_item(X), In),
   X == uint(500),
 true.
 
-test_item_negative_10 :-
+test_item_decode_500 :-
+  Item = uint(500),
+  findall(Output, cbor_item(Item, Output, []), Answers),
+  Answers == [
+    [25, 1, 244],
+    [26, 0, 0, 1, 244],
+    [27, 0, 0, 0, 0, 0, 0, 1, 244]
+  ],
+true.
+
+test_item_encode_negative_10 :-
   maplist(char_code, "\x29\", In),
   phrase(cbor_item(X), In),
   X == int(-10),
 true.
 
-test_item_negative_500 :-
+test_item_encode_negative_500 :-
   maplist(char_code, "\x39\\x01\\xf3\", In),
   phrase(cbor_item(X), In),
   X == int(-500),
 true.
 
-test_item_5_bytes :-
+test_item_encode_5_bytes :-
   length(Payload, 5),
   maplist(char_code, "\x45\", Header),
   append(Header, Payload, In),
@@ -47,7 +69,7 @@ test_item_5_bytes :-
   X == bytes(Payload),
 true.
 
-test_item_500_bytes :-
+test_item_encode_500_bytes :-
   length(Payload, 500),
   maplist(char_code, "\x59\\x01\\xf4\", Header),
   append(Header, Payload, In),
@@ -55,8 +77,8 @@ test_item_500_bytes :-
   X == bytes(Payload),
 true.
 
-nwdet(test_item_small_ascii_text).
-test_item_small_ascii_text :-
+nwdet(test_item_encode_small_ascii_text).
+test_item_encode_small_ascii_text :-
   Text = "ascii rules!",
   maplist(char_code, Text, Payload),
   maplist(char_code, "\x6c\", Header),
@@ -65,8 +87,8 @@ test_item_small_ascii_text :-
   X == text(Text),
 true.
 
-nwdet(test_item_medium_ascii_text).
-test_item_medium_ascii_text :-
+nwdet(test_item_encode_medium_ascii_text).
+test_item_encode_medium_ascii_text :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
   maplist(char_code, Text, Payload),
   maplist(char_code, "\x78\\x31\", Header),
