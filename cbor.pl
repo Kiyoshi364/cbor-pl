@@ -25,9 +25,6 @@ word( X) :- X in 0x00..0xffffffff.
 quad( X) :- X in 0x00..0xffffffffffffffff.
 
 byte( X) --> {  byte(X) }, [X].
-short(X) --> { short(X) }, [X].
-word( X) --> {  word(X) }, [X].
-quad( X) --> {  quad(X) }, [X].
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
