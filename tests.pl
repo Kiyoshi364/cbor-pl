@@ -23,7 +23,7 @@ true.
 
 test_item_decode_10 :-
   Item = unsigned(10),
-  findall(Output, cbor_item(Item, Output, []), Answers),
+  findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [10],
     [24, 10],
@@ -41,7 +41,7 @@ true.
 
 test_item_decode_500 :-
   Item = unsigned(500),
-  findall(Output, cbor_item(Item, Output, []), Answers),
+  findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [25, 1, 244],
     [26, 0, 0, 1, 244],
@@ -57,7 +57,7 @@ true.
 
 test_item_decode_negative_10 :-
   Item = negative(-10),
-  findall(Output, cbor_item(Item, Output, []), Answers),
+  findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [41],
     [56, 9],
@@ -75,7 +75,7 @@ true.
 
 test_item_decode_negative_500 :-
   Item = negative(-500),
-  findall(Output, cbor_item(Item, Output, []), Answers),
+  findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [57, 1, 243],
     [58, 0, 0, 1, 243],
