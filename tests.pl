@@ -18,11 +18,11 @@ nwdet_ok(_:T) :- nwdet(T).
 test_item_encode_10 :-
   maplist(char_code, "\x0a\", In),
   phrase(cbor_item(X), In),
-  X == uint(10),
+  X == unsigned(10),
 true.
 
 test_item_decode_10 :-
-  Item = uint(10),
+  Item = unsigned(10),
   findall(Output, cbor_item(Item, Output, []), Answers),
   Answers == [
     [10],
@@ -36,11 +36,11 @@ true.
 test_item_encode_500 :-
   maplist(char_code, "\x19\\x01\\xf4\", In),
   phrase(cbor_item(X), In),
-  X == uint(500),
+  X == unsigned(500),
 true.
 
 test_item_decode_500 :-
-  Item = uint(500),
+  Item = unsigned(500),
   findall(Output, cbor_item(Item, Output, []), Answers),
   Answers == [
     [25, 1, 244],
@@ -52,11 +52,11 @@ true.
 test_item_encode_negative_10 :-
   maplist(char_code, "\x29\", In),
   phrase(cbor_item(X), In),
-  X == int(-10),
+  X == negative(-10),
 true.
 
 test_item_decode_negative_10 :-
-  Item = int(-10),
+  Item = negative(-10),
   findall(Output, cbor_item(Item, Output, []), Answers),
   Answers == [
     [41],
@@ -70,11 +70,11 @@ true.
 test_item_encode_negative_500 :-
   maplist(char_code, "\x39\\x01\\xf3\", In),
   phrase(cbor_item(X), In),
-  X == int(-500),
+  X == negative(-500),
 true.
 
 test_item_decode_negative_500 :-
-  Item = int(-500),
+  Item = negative(-500),
   findall(Output, cbor_item(Item, Output, []), Answers),
   Answers == [
     [57, 1, 243],
@@ -84,39 +84,43 @@ test_item_decode_negative_500 :-
 true.
 
 test_item_encode_5_bytes :-
-  length(Payload, 5),
+  Len = 5,
+  length(Payload, Len),
   maplist(char_code, "\x45\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
-  X == bytes(Payload),
+  X == bytes(len(Len), Payload),
 true.
 
 test_item_encode_500_bytes :-
-  length(Payload, 500),
+  Len = 500,
+  length(Payload, Len),
   maplist(char_code, "\x59\\x01\\xf4\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
-  X == bytes(Payload),
+  X == bytes(len(Len), Payload),
 true.
 
 nwdet(test_item_encode_small_ascii_text).
 test_item_encode_small_ascii_text :-
   Text = "ascii rules!",
+  length(Text, Len),
   maplist(char_code, Text, Payload),
   maplist(char_code, "\x6c\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
-  X == text(Text),
+  X == text(len(Len), Text),
 true.
 
 nwdet(test_item_encode_medium_ascii_text).
 test_item_encode_medium_ascii_text :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
+  length(Text, Len),
   maplist(char_code, Text, Payload),
   maplist(char_code, "\x78\\x31\", Header),
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
-  X == text(Text),
+  X == text(len(Len), Text),
 true.
 
 % TODO: add tests for utf8 text

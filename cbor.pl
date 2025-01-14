@@ -90,28 +90,28 @@ cbor_major_value_x(5, Value, X) --> cbor_5_value_x(Value, X).
 cbor_major_value_x(6, Value, X) --> cbor_6_value_x(Value, X).
 cbor_major_value_x(7, Value, X) --> cbor_7_value_x(Value, X).
 
-cbor_0_value_x(val(V), uint(V)) --> [].
+cbor_0_value_x(val(V), unsigned(V)) --> [].
 % Not well-formed: 0x00 + 28 = 28
 cbor_0_value_x(reserved(28), nwf(28)) --> [].
 cbor_0_value_x(reserved(29), nwf(29)) --> [].
 cbor_0_value_x(reserved(30), nwf(30)) --> [].
 cbor_0_value_x(indefinite, nwf(31)) --> [].
 
-cbor_1_value_x(val(V), int(X)) --> { #X #< 0, #X #= \ #V, #X + #V #= -1 }.
+cbor_1_value_x(val(V), negative(X)) --> { #X #< 0, #X #= \ #V, #X + #V #= -1 }.
 % Not well-formed: 0x20 + 28 = 60
 cbor_1_value_x(reserved(28), nwf(60)) --> [].
 cbor_1_value_x(reserved(29), nwf(61)) --> [].
 cbor_1_value_x(reserved(30), nwf(62)) --> [].
 cbor_1_value_x(indefinite, nwf(63)) --> [].
 
-cbor_2_value_x(val(V), bytes(X)) --> numberbytes_list(V, X).
+cbor_2_value_x(val(V), bytes(len(V), X)) --> numberbytes_list(V, X).
 % Not well-formed: 0x40 + 28 = 92
 cbor_2_value_x(reserved(28), nwf(92)) --> [].
 cbor_2_value_x(reserved(29), nwf(93)) --> [].
 cbor_2_value_x(reserved(30), nwf(94)) --> [].
 cbor_2_value_x(indefinite, not_implemented) --> []. % TODO
 
-cbor_3_value_x(val(V), text(X)) --> numberbytes_text(V, X).
+cbor_3_value_x(val(V), text(len(V), X)) --> numberbytes_text(V, X).
 % Not well-formed: 0x60 + 28 = 124
 cbor_3_value_x(reserved(28), nwf(124)) --> [].
 cbor_3_value_x(reserved(29), nwf(125)) --> [].
