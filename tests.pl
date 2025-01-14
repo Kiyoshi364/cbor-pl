@@ -12,10 +12,14 @@
 ]).
 :- use_module(library(iso_ext), [call_cleanup/2]).
 
+pair_unpair_(K-V, [K, V | L], L).
+
+headerlist_payload_input(H, Payload, In) :-
+  maplist(char_code, H, Header),
+  append(Header, Payload, In).
+
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
-
-pair_unpair_(K-V, [K, V | L], L).
 
 test_item_encode_10 :-
   maplist(char_code, "\x0a\", In),
@@ -88,8 +92,7 @@ true.
 test_item_encode_5_bytes :-
   Len = 5,
   length(Payload, Len),
-  maplist(char_code, "\x45\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\x45\", Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(len(Len), Payload),
 true.
@@ -97,8 +100,7 @@ true.
 test_item_encode_500_bytes :-
   Len = 500,
   length(Payload, Len),
-  maplist(char_code, "\x59\\x01\\xf4\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\x59\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(len(Len), Payload),
 true.
@@ -106,10 +108,10 @@ true.
 nwdet(test_item_encode_small_ascii_text).
 test_item_encode_small_ascii_text :-
   Text = "ascii rules!",
+  Len = 12,
   length(Text, Len),
   maplist(char_code, Text, Payload),
-  maplist(char_code, "\x6c\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\x6c\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(Len), Text),
 true.
@@ -117,10 +119,10 @@ true.
 nwdet(test_item_encode_medium_ascii_text).
 test_item_encode_medium_ascii_text :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
+  Len = 49,
   length(Text, Len),
   maplist(char_code, Text, Payload),
-  maplist(char_code, "\x78\\x31\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\x78\\x31\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(Len), Text),
 true.
@@ -132,8 +134,7 @@ test_item_encode_array :-
   Len = 4,
   length(Items, Len),
   once(foldl(cbor_item, Items, Payload, [])),
-  maplist(char_code, "\x84\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\x84\", Payload, In),
   phrase(cbor_item(X), In),
   X == array(len(Len), Items),
 true.
@@ -144,8 +145,7 @@ test_item_encode_map :-
   Len = 2,
   length(Pairs, Len),
   once(foldl(cbor_item, Items, Payload, [])),
-  maplist(char_code, "\xa2\", Header),
-  append(Header, Payload, In),
+  headerlist_payload_input("\xa2\", Payload, In),
   phrase(cbor_item(X), In),
   X == map(len(Len), Pairs),
 true.
