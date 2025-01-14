@@ -17,6 +17,8 @@
 
 cbor(X) --> cbor_item(X).
 
+cbor_pair(K-V) --> cbor_item(K), cbor_item(V).
+
 byte( X) :- X in 0x00..0xff.
 short(X) :- X in 0x00..0xffff.
 word( X) :- X in 0x00..0xffffffff.
@@ -125,7 +127,13 @@ cbor_4_value_x(reserved(29), nwf(157)) --> [].
 cbor_4_value_x(reserved(30), nwf(158)) --> [].
 cbor_4_value_x(indefinite, not_implemented) --> []. % TODO
 
-cbor_5_value_x(_, not_implemented) --> []. % TODO
+cbor_5_value_x(val(V), map(len(V), X)) --> numberbytes_map(V, X).
+% Not well-formed: 0xa0 + 28 = 188
+cbor_5_value_x(reserved(28), nwf(188)) --> [].
+cbor_5_value_x(reserved(29), nwf(189)) --> [].
+cbor_5_value_x(reserved(30), nwf(190)) --> [].
+cbor_5_value_x(indefinite, not_implemented) --> []. % TODO
+
 cbor_6_value_x(_, not_implemented) --> []. % TODO
 cbor_7_value_x(_, not_implemented) --> []. % TODO
 
@@ -136,6 +144,7 @@ numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
+numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).
 
 numberbytes_text(N, T) --> numberbytes_text(N, utf8_begin, T).
 numberbytes_text(N0, S0, T) -->

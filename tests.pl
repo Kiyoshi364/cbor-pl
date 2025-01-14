@@ -15,6 +15,8 @@
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
+pair_unpair_(K-V, [K, V | L], L).
+
 test_item_encode_10 :-
   maplist(char_code, "\x0a\", In),
   phrase(cbor_item(X), In),
@@ -134,6 +136,18 @@ test_item_encode_array :-
   append(Header, Payload, In),
   phrase(cbor_item(X), In),
   X == array(len(Len), Items),
+true.
+
+test_item_encode_map :-
+  Pairs = [unsigned(10)-unsigned(500), negative(-10)-negative(-500)],
+  foldl(pair_unpair_, Pairs, Items, []),
+  Len = 2,
+  length(Pairs, Len),
+  once(foldl(cbor_item, Items, Payload, [])),
+  maplist(char_code, "\xa2\", Header),
+  append(Header, Payload, In),
+  phrase(cbor_item(X), In),
+  X == map(len(Len), Pairs),
 true.
 
 run_tests :-
