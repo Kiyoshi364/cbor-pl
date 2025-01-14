@@ -125,6 +125,17 @@ true.
 
 % TODO: add tests for utf8 text
 
+test_item_encode_array :-
+  Items = [unsigned(10), unsigned(500), negative(-10), negative(-500)],
+  Len = 4,
+  length(Items, Len),
+  once(foldl(cbor_item, Items, Payload, [])),
+  maplist(char_code, "\x84\", Header),
+  append(Header, Payload, In),
+  phrase(cbor_item(X), In),
+  X == array(len(Len), Items),
+true.
+
 run_tests :-
   ( findall(T,
       ( T = M:P,

@@ -11,7 +11,7 @@
   op(450, xfx, ..),
   op(150, fx, #)
 ]).
-:- use_module(library(lists), [length/2]).
+:- use_module(library(lists), [foldl/4, length/2]).
 
 :- initialization(assertz(clpz:monotonic)).
 
@@ -118,7 +118,13 @@ cbor_3_value_x(reserved(29), nwf(125)) --> [].
 cbor_3_value_x(reserved(30), nwf(126)) --> [].
 cbor_3_value_x(indefinite, not_implemented) --> []. % TODO
 
-cbor_4_value_x(_, not_implemented) --> []. % TODO
+cbor_4_value_x(val(V), array(len(V), X)) --> numberbytes_array(V, X).
+% Not well-formed: 0x80 + 28 = 156
+cbor_4_value_x(reserved(28), nwf(156)) --> [].
+cbor_4_value_x(reserved(29), nwf(157)) --> [].
+cbor_4_value_x(reserved(30), nwf(158)) --> [].
+cbor_4_value_x(indefinite, not_implemented) --> []. % TODO
+
 cbor_5_value_x(_, not_implemented) --> []. % TODO
 cbor_6_value_x(_, not_implemented) --> []. % TODO
 cbor_7_value_x(_, not_implemented) --> []. % TODO
@@ -129,6 +135,7 @@ numbytes_number(4, X) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X
 numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
+numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
 
 numberbytes_text(N, T) --> numberbytes_text(N, utf8_begin, T).
 numberbytes_text(N0, S0, T) -->
