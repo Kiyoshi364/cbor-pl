@@ -131,7 +131,13 @@ cbor_5_value_x(reserved(29), nwf(189)) --> [].
 cbor_5_value_x(reserved(30), nwf(190)) --> [].
 cbor_5_value_x(indefinite, not_implemented) --> []. % TODO
 
-cbor_6_value_x(_, not_implemented) --> []. % TODO
+cbor_6_value_x(val(V), tag(tag(V), X)) --> cbor_item(X).
+% Not well-formed: 0xc0 + 28 = 220
+cbor_6_value_x(reserved(28), nwf(220)) --> [].
+cbor_6_value_x(reserved(29), nwf(221)) --> [].
+cbor_6_value_x(reserved(30), nwf(222)) --> [].
+cbor_6_value_x(indefinite,   nwf(223)) --> [].
+
 cbor_7_value_x(_, not_implemented) --> []. % TODO
 
 numbytes_number(1, X) --> byte(X).

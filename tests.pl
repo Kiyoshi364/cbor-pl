@@ -150,6 +150,24 @@ test_item_encode_map :-
   X == map(len(Len), Pairs),
 true.
 
+test_item_encode_tag_small :-
+  TagNumber = 10,
+  Item = unsigned(500),
+  once(phrase(cbor_item(Item), Payload)),
+  headerlist_payload_input("\xca\", Payload, In),
+  phrase(cbor_item(X), In),
+  X == tag(tag(TagNumber), Item),
+true.
+
+test_item_encode_tag_big :-
+  TagNumber = 500,
+  Item = unsigned(500),
+  once(phrase(cbor_item(Item), Payload)),
+  headerlist_payload_input("\xd9\\x01\\xf4\", Payload, In),
+  phrase(cbor_item(X), In),
+  X == tag(tag(TagNumber), Item),
+true.
+
 run_tests :-
   ( findall(T,
       ( T = M:P,
