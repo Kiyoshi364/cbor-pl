@@ -24,7 +24,7 @@ short(X) :- X in 0x00..0xffff.
 word( X) :- X in 0x00..0xffffffff.
 quad( X) :- X in 0x00..0xffffffffffffffff.
 
-byte( X) --> {  byte(X) }, [X].
+byte(X) --> { byte(X) }, [X].
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
