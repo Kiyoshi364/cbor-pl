@@ -21,13 +21,13 @@ headerlist_payload_input(H, Payload, In) :-
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
-test_item_encode_10 :-
+test_item_decode_10 :-
   maplist(char_code, "\x0a\", In),
   phrase(cbor_item(X), In),
   X == unsigned(10),
 true.
 
-test_item_decode_10 :-
+test_item_encode_10 :-
   Item = unsigned(10),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
@@ -39,13 +39,13 @@ test_item_decode_10 :-
   ],
 true.
 
-test_item_encode_500 :-
+test_item_decode_500 :-
   maplist(char_code, "\x19\\x01\\xf4\", In),
   phrase(cbor_item(X), In),
   X == unsigned(500),
 true.
 
-test_item_decode_500 :-
+test_item_encode_500 :-
   Item = unsigned(500),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
@@ -55,13 +55,13 @@ test_item_decode_500 :-
   ],
 true.
 
-test_item_encode_negative_10 :-
+test_item_decode_negative_10 :-
   maplist(char_code, "\x29\", In),
   phrase(cbor_item(X), In),
   X == negative(-10),
 true.
 
-test_item_decode_negative_10 :-
+test_item_encode_negative_10 :-
   Item = negative(-10),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
@@ -73,13 +73,13 @@ test_item_decode_negative_10 :-
   ],
 true.
 
-test_item_encode_negative_500 :-
+test_item_decode_negative_500 :-
   maplist(char_code, "\x39\\x01\\xf3\", In),
   phrase(cbor_item(X), In),
   X == negative(-500),
 true.
 
-test_item_decode_negative_500 :-
+test_item_encode_negative_500 :-
   Item = negative(-500),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
@@ -89,7 +89,7 @@ test_item_decode_negative_500 :-
   ],
 true.
 
-test_item_encode_5_bytes :-
+test_item_decode_5_bytes :-
   Len = 5,
   length(Payload, Len),
   headerlist_payload_input("\x45\", Payload, In),
@@ -97,7 +97,7 @@ test_item_encode_5_bytes :-
   X == bytes(len(Len), Payload),
 true.
 
-test_item_encode_500_bytes :-
+test_item_decode_500_bytes :-
   Len = 500,
   length(Payload, Len),
   headerlist_payload_input("\x59\\x01\\xf4\", Payload, In),
@@ -105,8 +105,8 @@ test_item_encode_500_bytes :-
   X == bytes(len(Len), Payload),
 true.
 
-nwdet(test_item_encode_small_ascii_text).
-test_item_encode_small_ascii_text :-
+nwdet(test_item_decode_small_ascii_text).
+test_item_decode_small_ascii_text :-
   Text = "ascii rules!",
   Len = 12,
   length(Text, Len),
@@ -116,8 +116,8 @@ test_item_encode_small_ascii_text :-
   X == text(len(Len), Text),
 true.
 
-nwdet(test_item_encode_medium_ascii_text).
-test_item_encode_medium_ascii_text :-
+nwdet(test_item_decode_medium_ascii_text).
+test_item_decode_medium_ascii_text :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
   Len = 49,
   length(Text, Len),
@@ -129,7 +129,7 @@ true.
 
 % TODO: add tests for utf8 text
 
-test_item_encode_array :-
+test_item_decode_array :-
   Items = [unsigned(10), unsigned(500), negative(-10), negative(-500)],
   Len = 4,
   length(Items, Len),
@@ -139,7 +139,7 @@ test_item_encode_array :-
   X == array(len(Len), Items),
 true.
 
-test_item_encode_map :-
+test_item_decode_map :-
   Pairs = [unsigned(10)-unsigned(500), negative(-10)-negative(-500)],
   foldl(pair_unpair_, Pairs, Items, []),
   Len = 2,
@@ -150,7 +150,7 @@ test_item_encode_map :-
   X == map(len(Len), Pairs),
 true.
 
-test_item_encode_tag_small :-
+test_item_decode_tag_small :-
   TagNumber = 10,
   Item = unsigned(500),
   once(phrase(cbor_item(Item), Payload)),
@@ -159,7 +159,7 @@ test_item_encode_tag_small :-
   X == tag(tag(TagNumber), Item),
 true.
 
-test_item_encode_tag_big :-
+test_item_decode_tag_big :-
   TagNumber = 500,
   Item = unsigned(500),
   once(phrase(cbor_item(Item), Payload)),
@@ -168,13 +168,13 @@ test_item_encode_tag_big :-
   X == tag(tag(TagNumber), Item),
 true.
 
-test_item_encode_small_simple :-
+test_item_decode_small_simple :-
   maplist(char_code, "\xf4\", In),
   phrase(cbor_item(X), In),
   X == simple(20),
 true.
 
-test_item_encode_big_simple :-
+test_item_decode_big_simple :-
   maplist(char_code, "\xf8\\x78\", In),
   phrase(cbor_item(X), In),
   X == simple(120),
