@@ -168,6 +168,20 @@ test_item_encode_tag_big :-
   X == tag(tag(TagNumber), Item),
 true.
 
+test_item_encode_small_simple :-
+  maplist(char_code, "\xf4\", In),
+  phrase(cbor_item(X), In),
+  X == simple(20),
+true.
+
+test_item_encode_big_simple :-
+  maplist(char_code, "\xf8\\x78\", In),
+  phrase(cbor_item(X), In),
+  X == simple(120),
+true.
+
+% TODO: add tests for floats
+
 run_tests :-
   ( findall(T,
       ( T = M:P,
