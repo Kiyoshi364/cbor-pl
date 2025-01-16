@@ -105,8 +105,8 @@ test_item_decode_500_bytes :-
   X == bytes(len(Len), Payload),
 true.
 
-nwdet(test_item_decode_small_ascii_text).
-test_item_decode_small_ascii_text :-
+nwdet(test_item_decode_text_ascii_small).
+test_item_decode_text_ascii_small :-
   Text = "ascii rules!",
   Len = 12,
   length(Text, Len),
@@ -116,8 +116,8 @@ test_item_decode_small_ascii_text :-
   X == text(len(Len), Text),
 true.
 
-nwdet(test_item_decode_medium_ascii_text).
-test_item_decode_medium_ascii_text :-
+nwdet(test_item_decode_text_ascii_medium).
+test_item_decode_text_ascii_medium :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
   Len = 49,
   length(Text, Len),
@@ -168,13 +168,13 @@ test_item_decode_tag_big :-
   X == tag(tag(TagNumber), Item),
 true.
 
-test_item_decode_small_simple :-
+test_item_decode_simple_small :-
   maplist(char_code, "\xf4\", In),
   phrase(cbor_item(X), In),
   X == simple(20),
 true.
 
-test_item_decode_big_simple :-
+test_item_decode_simple_big :-
   maplist(char_code, "\xf8\\x78\", In),
   phrase(cbor_item(X), In),
   X == simple(120),
