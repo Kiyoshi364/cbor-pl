@@ -22,7 +22,7 @@ nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
 test_item_decode_10 :-
-  maplist(char_code, "\x0a\", In),
+  headerlist_payload_input("\x0a\", "", In),
   phrase(cbor_item(X), In),
   X == unsigned(10),
 true.
@@ -40,7 +40,7 @@ test_item_encode_10 :-
 true.
 
 test_item_decode_500 :-
-  maplist(char_code, "\x19\\x01\\xf4\", In),
+  headerlist_payload_input("\x19\\x01\\xf4\", "", In),
   phrase(cbor_item(X), In),
   X == unsigned(500),
 true.
@@ -56,7 +56,7 @@ test_item_encode_500 :-
 true.
 
 test_item_decode_negative_10 :-
-  maplist(char_code, "\x29\", In),
+  headerlist_payload_input("\x29\", "", In),
   phrase(cbor_item(X), In),
   X == negative(-10),
 true.
@@ -74,7 +74,7 @@ test_item_encode_negative_10 :-
 true.
 
 test_item_decode_negative_500 :-
-  maplist(char_code, "\x39\\x01\\xf3\", In),
+  headerlist_payload_input("\x39\\x01\\xf3\", "", In),
   phrase(cbor_item(X), In),
   X == negative(-500),
 true.
@@ -247,13 +247,13 @@ test_item_decode_tag_big :-
 true.
 
 test_item_decode_simple_small :-
-  maplist(char_code, "\xf4\", In),
+  headerlist_payload_input("\xf4\", "", In),
   phrase(cbor_item(X), In),
   X == simple(20),
 true.
 
 test_item_decode_simple_big :-
-  maplist(char_code, "\xf8\\x78\", In),
+  headerlist_payload_input("\xf8\\x78\", "", In),
   phrase(cbor_item(X), In),
   X == simple(120),
 true.
