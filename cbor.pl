@@ -108,28 +108,28 @@ cbor_2_value_x(val(_, V), bytes(len(V), X)) --> numberbytes_list(V, X).
 cbor_2_value_x(reserved(28), nwf(92)) --> [].
 cbor_2_value_x(reserved(29), nwf(93)) --> [].
 cbor_2_value_x(reserved(30), nwf(94)) --> [].
-cbor_2_value_x(indefinite, not_implemented) --> []. % TODO
+cbor_2_value_x(indefinite, bytes(*, X)) --> indefinite_bytes(X).
 
 cbor_3_value_x(val(_, V), text(len(V), X)) --> numberbytes_text(V, X).
 % Not well-formed: 0x60 + 28 = 124
 cbor_3_value_x(reserved(28), nwf(124)) --> [].
 cbor_3_value_x(reserved(29), nwf(125)) --> [].
 cbor_3_value_x(reserved(30), nwf(126)) --> [].
-cbor_3_value_x(indefinite, not_implemented) --> []. % TODO
+cbor_3_value_x(indefinite, text(*, X)) --> indefinite_text(X).
 
 cbor_4_value_x(val(_, V), array(len(V), X)) --> numberbytes_array(V, X).
 % Not well-formed: 0x80 + 28 = 156
 cbor_4_value_x(reserved(28), nwf(156)) --> [].
 cbor_4_value_x(reserved(29), nwf(157)) --> [].
 cbor_4_value_x(reserved(30), nwf(158)) --> [].
-cbor_4_value_x(indefinite, not_implemented) --> []. % TODO
+cbor_4_value_x(indefinite, array(*, X)) --> indefinite_array(X).
 
 cbor_5_value_x(val(_, V), map(len(V), X)) --> numberbytes_map(V, X).
 % Not well-formed: 0xa0 + 28 = 188
 cbor_5_value_x(reserved(28), nwf(188)) --> [].
 cbor_5_value_x(reserved(29), nwf(189)) --> [].
 cbor_5_value_x(reserved(30), nwf(190)) --> [].
-cbor_5_value_x(indefinite, not_implemented) --> []. % TODO
+cbor_5_value_x(indefinite, map(*, X)) --> indefinite_map(X).
 
 cbor_6_value_x(val(_, V), tag(tag(V), X)) --> cbor_item(X).
 % Not well-formed: 0xc0 + 28 = 220
@@ -143,7 +143,7 @@ cbor_7_value_x(val(A, V), X) --> { simple_or_float(A, V, X) }.
 cbor_7_value_x(reserved(28), nwf(252)) --> [].
 cbor_7_value_x(reserved(29), nwf(253)) --> [].
 cbor_7_value_x(reserved(30), nwf(254)) --> [].
-cbor_7_value_x(indefinite,   nwf(255)) --> [].
+cbor_7_value_x(indefinite,   break) --> [].
 
 numbytes_number(1, X) --> byte(X).
 numbytes_number(2, X) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
@@ -167,6 +167,53 @@ numberbytes_text(N0, S0, T) -->
 utf8_state_byte_next(utf8_begin, Byte, utf8_begin, [Char | T], T) :-
   #Byte #< 0x80,
   char_code(Char, Byte).
+
+indefinite_bytes(X) --> cbor_item(Item), indefinite_help_(Item, X, bytes_uni, indefinite_bytes).
+bytes_uni(unsigned(V), nwf(unsigned(V))).
+bytes_uni(negative(V), nwf(negative(V))).
+bytes_uni(text(L , V), nwf(text(L , V))).
+bytes_uni(array(L, V), nwf(array(L, V))).
+bytes_uni(map(L  , V), nwf(map(L  , V))).
+bytes_uni(tag(T  , V), nwf(tag(T  , V))).
+bytes_uni(simple(V)  , nwf(simple(V)  )).
+bytes_uni(float(S, V), nwf(float(S, V))).
+bytes_uni(nwf(Byte)  , nwf(nwf(Byte)  )).
+bytes_uni(bytes(L, V), A) :- len_uni_(L, bytes(L, V), A).
+
+indefinite_text(X) --> cbor_item(Item), indefinite_help_(Item, X, text_uni, indefinite_text).
+text_uni(unsigned(V), nwf(unsigned(V))).
+text_uni(negative(V), nwf(negative(V))).
+text_uni(bytes(L , V), nwf(bytes(L , V))).
+text_uni(array(L, V), nwf(array(L, V))).
+text_uni(map(L  , V), nwf(map(L  , V))).
+text_uni(tag(T  , V), nwf(tag(T  , V))).
+text_uni(simple(V)  , nwf(simple(V)  )).
+text_uni(float(S, V), nwf(float(S, V))).
+text_uni(nwf(Byte)  , nwf(nwf(Byte)  )).
+text_uni(text(L, V), A) :- len_uni_(L, text(L, V), A).
+
+len_uni_(len(_), A, A).
+len_uni_(*, A, nwf(A)).
+
+indefinite_array(X) --> cbor_item(Item), indefinite_help_(Item, X, =, indefinite_array).
+
+indefinite_map(X) --> cbor_item(Item), indefinite_help_(Item, X, map_uni(Val), indefinite_map_(Val)).
+indefinite_map_(Val, X) --> cbor_item(Val), indefinite_map(X).
+map_uni(Val, Key, Key-Val).
+
+:- meta_predicate(indefinite_help_(?, ?, 2, 3, 5, ?, ?)).
+
+indefinite_help_(unsigned(V), [Item | X], In_Out, DCG) --> { call(In_Out, unsigned(V), Item) }, call(DCG, X).
+indefinite_help_(negative(V), [Item | X], In_Out, DCG) --> { call(In_Out, negative(V), Item) }, call(DCG, X).
+indefinite_help_(bytes(L, V), [Item | X], In_Out, DCG) --> { call(In_Out, bytes(L, V), Item) }, call(DCG, X).
+indefinite_help_(text(L , V), [Item | X], In_Out, DCG) --> { call(In_Out, text(L , V), Item) }, call(DCG, X).
+indefinite_help_(array(L, V), [Item | X], In_Out, DCG) --> { call(In_Out, array(L, V), Item) }, call(DCG, X).
+indefinite_help_(map(L  , V), [Item | X], In_Out, DCG) --> { call(In_Out, map(L  , V), Item) }, call(DCG, X).
+indefinite_help_(tag(T  , V), [Item | X], In_Out, DCG) --> { call(In_Out, tag(T  , V), Item) }, call(DCG, X).
+indefinite_help_(simple(V)  , [Item | X], In_Out, DCG) --> { call(In_Out, simple(V)  , Item) }, call(DCG, X).
+indefinite_help_(float(S, V), [Item | X], In_Out, DCG) --> { call(In_Out, float(S, V), Item) }, call(DCG, X).
+indefinite_help_(nwf(Byte)  , [Item | X], In_Out, DCG) --> { call(In_Out, nwf(Byte)  , Item) }, call(DCG, X).
+indefinite_help_(break      , [], _, _) --> [].
 
 simple_or_float(i, V, simple(V)) :- V in 0..23.
 simple_or_float(x1, V, simple(V)) :- V in 0x20..0xff.
