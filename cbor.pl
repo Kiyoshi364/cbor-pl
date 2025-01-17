@@ -14,7 +14,7 @@
 :- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(lists), [foldl/4, length/2]).
 
-:- initialization(assertz(clpz:monotonic)).
+clpz:monotonic.
 
 cbor(X) --> cbor_item(X).
 
