@@ -24,11 +24,11 @@ nwdet_ok(_:T) :- nwdet(T).
 test_item_decode_10 :-
   headerlist_payload_input("\x0a\", "", In),
   phrase(cbor_item(X), In),
-  X == unsigned(10),
+  X == unsigned(i, 10),
 true.
 
 test_item_encode_10 :-
-  Item = unsigned(10),
+  Item = unsigned(_, 10),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [10],
@@ -42,11 +42,11 @@ true.
 test_item_decode_500 :-
   headerlist_payload_input("\x19\\x01\\xf4\", "", In),
   phrase(cbor_item(X), In),
-  X == unsigned(500),
+  X == unsigned(x2, 500),
 true.
 
 test_item_encode_500 :-
-  Item = unsigned(500),
+  Item = unsigned(_, 500),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [25, 1, 244],
@@ -58,11 +58,11 @@ true.
 test_item_decode_negative_10 :-
   headerlist_payload_input("\x29\", "", In),
   phrase(cbor_item(X), In),
-  X == negative(-10),
+  X == negative(i, -10),
 true.
 
 test_item_encode_negative_10 :-
-  Item = negative(-10),
+  Item = negative(_, -10),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [41],
@@ -76,11 +76,11 @@ true.
 test_item_decode_negative_500 :-
   headerlist_payload_input("\x39\\x01\\xf3\", "", In),
   phrase(cbor_item(X), In),
-  X == negative(-500),
+  X == negative(x2, -500),
 true.
 
 test_item_encode_negative_500 :-
-  Item = negative(-500),
+  Item = negative(_, -500),
   findall(Out, cbor_item(Item, Out, []), Answers),
   Answers == [
     [57, 1, 243],
@@ -94,7 +94,7 @@ test_item_decode_5_bytes :-
   length(Payload, Len),
   headerlist_payload_input("\x45\", Payload, In),
   phrase(cbor_item(X), In),
-  X == bytes(len(Len), Payload),
+  X == bytes(len(i, Len), Payload),
 true.
 
 test_item_decode_500_bytes :-
@@ -102,15 +102,15 @@ test_item_decode_500_bytes :-
   length(Payload, Len),
   headerlist_payload_input("\x59\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
-  X == bytes(len(Len), Payload),
+  X == bytes(len(x2, Len), Payload),
 true.
 
 test_item_decode_bytes_indefinite :-
   headerlist_payload_input("\x5f\\x44\\xaa\\xbb\\xcc\\xdd\\x43\\xee\\xff\\x99\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == bytes(*, [
-    bytes(len(4), [0xaa, 0xbb, 0xcc, 0xdd]),
-    bytes(len(3), [0xee, 0xff, 0x99])
+    bytes(len(i, 4), [0xaa, 0xbb, 0xcc, 0xdd]),
+    bytes(len(i, 3), [0xee, 0xff, 0x99])
   ]),
 true.
 
@@ -121,7 +121,7 @@ test_item_decode_text_ascii_small :-
   maplist(char_code, Text, Payload),
   headerlist_payload_input("\x6c\", Payload, In),
   phrase(cbor_item(X), In),
-  X == text(len(Len), Text),
+  X == text(len(i, Len), Text),
 true.
 
 test_item_decode_text_ascii_medium :-
@@ -131,7 +131,7 @@ test_item_decode_text_ascii_medium :-
   maplist(char_code, Text, Payload),
   headerlist_payload_input("\x78\\x31\", Payload, In),
   phrase(cbor_item(X), In),
-  X == text(len(Len), Text),
+  X == text(len(x1, Len), Text),
 true.
 
 test_item_decode_text_utf8_small :-
@@ -143,7 +143,7 @@ test_item_decode_text_utf8_small :-
   length(Payload, PLen),
   headerlist_payload_input("\x77\", Payload, In),
   phrase(cbor_item(X), In),
-  X == text(len(PLen), Text),
+  X == text(len(i, PLen), Text),
 true.
 
 test_item_decode_text_utf8_medium :-
@@ -155,35 +155,35 @@ test_item_decode_text_utf8_medium :-
   length(Payload, PLen),
   headerlist_payload_input("\x78\\x22\", Payload, In),
   phrase(cbor_item(X), In),
-  X == text(len(PLen), Text),
+  X == text(len(x1, PLen), Text),
 true.
 
 test_item_decode_text_indefinite :-
   headerlist_payload_input("\x7f\\x63\\x61\\x62\\x63\\x62\\x30\\x31\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == text(*, [
-    text(len(3), "abc"),
-    text(len(2), "01")
+    text(len(i, 3), "abc"),
+    text(len(i, 2), "01")
   ]),
 true.
 
 test_item_decode_array :-
-  Items = [unsigned(10), unsigned(500), negative(-10), negative(-500)],
+  Items = [unsigned(i, 10), unsigned(x2, 500), negative(i, -10), negative(x2, -500)],
   Len = 4,
   length(Items, Len),
   once(foldl(cbor_item, Items, Payload, [])),
   headerlist_payload_input("\x84\", Payload, In),
   phrase(cbor_item(X), In),
-  X == array(len(Len), Items),
+  X == array(len(i, Len), Items),
 true.
 
 test_item_decode_array_1_23_45 :-
   headerlist_payload_input("\x83\\x01\\x82\\x02\\x03\\x82\\x04\\x05\", "", In),
   phrase(cbor_item(X), In),
-  X == array(len(3), [
-    unsigned(1),
-    array(len(2), [unsigned(2), unsigned(3)]),
-    array(len(2), [unsigned(4), unsigned(5)])
+  X == array(len(i, 3), [
+    unsigned(i, 1),
+    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
+    array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
   ]),
 true.
 
@@ -191,9 +191,9 @@ test_item_decode_indefinite_array_i1_23_45 :-
   headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x82\\x04\\x05\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == array(*, [
-    unsigned(1),
-    array(len(2), [unsigned(2), unsigned(3)]),
-    array(len(2), [unsigned(4), unsigned(5)])
+    unsigned(i, 1),
+    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
+    array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
   ]),
 true.
 
@@ -201,39 +201,39 @@ test_item_decode_indefinite_array_i1_23_i45 :-
   headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == array(*, [
-    unsigned(1),
-    array(len(2), [unsigned(2), unsigned(3)]),
-    array(*, [unsigned(4), unsigned(5)])
+    unsigned(i, 1),
+    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
+    array(*, [unsigned(i, 4), unsigned(i, 5)])
   ]),
 true.
 
 test_item_decode_array_1_23_i45 :-
   headerlist_payload_input("\x83\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\", "", In),
   phrase(cbor_item(X), In),
-  X == array(len(3), [
-    unsigned(1),
-    array(len(2), [unsigned(2), unsigned(3)]),
-    array(*, [unsigned(4), unsigned(5)])
+  X == array(len(i, 3), [
+    unsigned(i, 1),
+    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
+    array(*, [unsigned(i, 4), unsigned(i, 5)])
   ]),
 true.
 
 test_item_decode_map :-
-  Pairs = [unsigned(10)-unsigned(500), negative(-10)-negative(-500)],
+  Pairs = [unsigned(i, 10)-unsigned(x2, 500), negative(i, -10)-negative(x2, -500)],
   foldl(pair_unpair_, Pairs, Items, []),
   Len = 2,
   length(Pairs, Len),
   once(foldl(cbor_item, Items, Payload, [])),
   headerlist_payload_input("\xa2\", Payload, In),
   phrase(cbor_item(X), In),
-  X == map(len(Len), Pairs),
+  X == map(len(i, Len), Pairs),
 true.
 
 test_item_decode_indefinite_map_text :-
   headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == map(*, [
-    text(len(3), "Fun")-simple(21),
-    text(len(3), "Amt")-negative(-2)
+    text(len(i, 3), "Fun")-simple(i, 21),
+    text(len(i, 3), "Amt")-negative(i, -2)
   ]),
 true.
 
@@ -241,39 +241,39 @@ test_item_decode_indefinite_map_unsigned :-
   headerlist_payload_input("\xbf\\x20\\xf5\\x01\\x21\\xff\", "", In),
   phrase(cbor_item(X), In),
   X == map(*, [
-    negative(-1)-simple(21),
-    unsigned(1)-negative(-2)
+    negative(i, -1)-simple(i, 21),
+    unsigned(i, 1)-negative(i, -2)
   ]),
 true.
 
 test_item_decode_tag_small :-
   TagNumber = 10,
-  Item = unsigned(500),
+  Item = unsigned(x2, 500),
   once(phrase(cbor_item(Item), Payload)),
   headerlist_payload_input("\xca\", Payload, In),
   phrase(cbor_item(X), In),
-  X == tag(tag(TagNumber), Item),
+  X == tag(tag(i, TagNumber), Item),
 true.
 
 test_item_decode_tag_big :-
   TagNumber = 500,
-  Item = unsigned(500),
+  Item = unsigned(x2, 500),
   once(phrase(cbor_item(Item), Payload)),
   headerlist_payload_input("\xd9\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
-  X == tag(tag(TagNumber), Item),
+  X == tag(tag(x2, TagNumber), Item),
 true.
 
 test_item_decode_simple_small :-
   headerlist_payload_input("\xf4\", "", In),
   phrase(cbor_item(X), In),
-  X == simple(20),
+  X == simple(i, 20),
 true.
 
 test_item_decode_simple_big :-
   headerlist_payload_input("\xf8\\x78\", "", In),
   phrase(cbor_item(X), In),
-  X == simple(120),
+  X == simple(x1, 120),
 true.
 
 % TODO: add tests for floats
