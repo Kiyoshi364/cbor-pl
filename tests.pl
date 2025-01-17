@@ -114,7 +114,6 @@ test_item_decode_bytes_indefinite :-
   ]),
 true.
 
-nwdet(test_item_decode_text_ascii_small).
 test_item_decode_text_ascii_small :-
   Text = "ascii rules!",
   Len = 12,
@@ -125,7 +124,6 @@ test_item_decode_text_ascii_small :-
   X == text(len(Len), Text),
 true.
 
-nwdet(test_item_decode_text_ascii_medium).
 test_item_decode_text_ascii_medium :-
   Text = "ascii text with !@#$%*()_-+=\", 0123456789 and LF\n",
   Len = 49,
@@ -136,9 +134,30 @@ test_item_decode_text_ascii_medium :-
   X == text(len(Len), Text),
 true.
 
-% TODO: add tests for utf8 text
+test_item_decode_text_utf8_small :-
+  Text = "çáëõũüæ°„«»",
+  Len = 11,
+  length(Text, Len),
+  Payload = [0xc3, 0xa7, 0xc3, 0xa1, 0xc3, 0xab, 0xc3, 0xb5, 0xc5, 0xa9, 0xc3, 0xbc, 0xc3, 0xa6, 0xc2, 0xb0, 0xe2, 0x80, 0x9e, 0xc2, 0xab, 0xc2, 0xbb],
+  PLen = 23,
+  length(Payload, PLen),
+  headerlist_payload_input("\x77\", Payload, In),
+  phrase(cbor_item(X), In),
+  X == text(len(PLen), Text),
+true.
 
-nwdet(test_item_decode_text_indefinite).
+test_item_decode_text_utf8_medium :-
+  Text = "😀😶‍🌫🫱🏻‍🫲🏿",
+  Len = 9,
+  length(Text, Len),
+  Payload = [0xf0, 0x9f, 0x98, 0x80, 0xf0, 0x9f, 0x98, 0xb6, 0xe2, 0x80, 0x8d, 0xf0, 0x9f, 0x8c, 0xab, 0xf0, 0x9f, 0xab, 0xb1, 0xf0, 0x9f, 0x8f, 0xbb, 0xe2, 0x80, 0x8d, 0xf0, 0x9f, 0xab, 0xb2, 0xf0, 0x9f, 0x8f, 0xbf],
+  PLen = 34,
+  length(Payload, PLen),
+  headerlist_payload_input("\x78\\x22\", Payload, In),
+  phrase(cbor_item(X), In),
+  X == text(len(PLen), Text),
+true.
+
 test_item_decode_text_indefinite :-
   headerlist_payload_input("\x7f\\x63\\x61\\x62\\x63\\x62\\x30\\x31\\xff\", "", In),
   phrase(cbor_item(X), In),
@@ -209,7 +228,6 @@ test_item_decode_map :-
   X == map(len(Len), Pairs),
 true.
 
-nwdet(test_item_decode_indefinite_map_text).
 test_item_decode_indefinite_map_text :-
   headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
   phrase(cbor_item(X), In),

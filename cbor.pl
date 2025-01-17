@@ -11,6 +11,7 @@
   op(450, xfx, ..),
   op(150, fx, #)
 ]).
+:- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(lists), [foldl/4, length/2]).
 
 :- initialization(assertz(clpz:monotonic)).
@@ -151,22 +152,9 @@ numbytes_number(4, X) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X
 numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
+numberbytes_text(N, T) --> numberbytes_list(N, L), { chars_utf8bytes(T, L) }.
 numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
 numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).
-
-numberbytes_text(N, T) --> numberbytes_text(N, utf8_begin, T).
-numberbytes_text(N0, S0, T) -->
-  ( { #N0 #= 0, S0 = utf8_begin, T = [] }
-  ; { 0 #< #N0, #N #= #N0 - 1 },
-    byte(Byte),
-    { utf8_state_byte_next(S0, Byte, S, T, T1) },
-    numberbytes_text(N, S, T1)
-  ).
-
-% TODO: only implemented for simple case: ascii only
-utf8_state_byte_next(utf8_begin, Byte, utf8_begin, [Char | T], T) :-
-  #Byte #< 0x80,
-  char_code(Char, Byte).
 
 indefinite_bytes(X) --> cbor_item(Item), indefinite_help_(Item, X, bytes_uni, indefinite_bytes).
 bytes_uni(unsigned(V), nwf(unsigned(V))).
