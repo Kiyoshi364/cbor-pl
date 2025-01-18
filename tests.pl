@@ -280,18 +280,19 @@ true.
 
 % TODO: add tests for floats
 
-run_tests :-
+prefix_module_predicates(Prefix, M, Ps) :-
   ( findall(T,
       ( T = M:P,
-        M = cbor_tests,
         current_predicate(M:P/_),
         atom_chars(P, Name),
-        phrase(seq("test_"), Name, _)
+        phrase(seq(Prefix), Name, _)
       ),
-      Ts
+      Ps
     )
-  ; Ts = []
-  ),
+  ; Ps = []
+  ).
+
+run_log_and_halt(Ts) :-
   foldl(run_test, Ts, t(0, 0, 0, 0, 0), t(Np, Nf, Nd, Nds, Nt)),
   ( (Nf > 0 ; Nd > 0) -> nl; true ),
   ( Nf > 0 ->
@@ -312,6 +313,15 @@ run_tests :-
   ),
   ( Nt == Np -> ExitCode = 0 ; ExitCode = 1 ),
   halt(ExitCode),
+true.
+
+run_tests :- run_tests("test_").
+
+run_tests(Prefix) :- run_tests(Prefix, cbor_tests).
+
+run_tests(Prefix, Module) :-
+  prefix_module_predicates(Prefix, Module, Ts),
+  run_log_and_halt(Ts),
 true.
 
 :- meta_predicate(run_test(0, ?, ?)).
