@@ -12,6 +12,8 @@
 ]).
 :- use_module(library(iso_ext), [call_cleanup/2]).
 
+clpz:monotonic.
+
 pair_unpair_(K-V, [K, V | L], L).
 
 headerlist_payload_input(H, Payload, In) :-
