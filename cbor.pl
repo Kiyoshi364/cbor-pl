@@ -206,8 +206,8 @@ simple_or_float(x1, V, S) :-
   ( V in 0x00..0x1f, S = nwf(simple(x1, V))
   ; V in 0x20..0xff, S = simple(x1, V)
   ).
-simple_or_float(x2, V, float(16, X)) :- size_number_float(x2, V, X).
-simple_or_float(x3, V, float(32, X)) :- size_number_float(x3, V, X).
-simple_or_float(x4, V, float(64, X)) :- size_number_float(x4, V, X).
+simple_or_float(x2, V, float(x2, X)) :- size_value_float(x2, V, X).
+simple_or_float(x4, V, float(x4, X)) :- size_value_float(x4, V, X).
+simple_or_float(x8, V, float(x8, X)) :- size_value_float(x8, V, X).
 
-number_float(_, F, F). % TODO
+size_value_float(_, F, F). % TODO
