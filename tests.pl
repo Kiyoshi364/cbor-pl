@@ -1,5 +1,5 @@
 :- module(cbor_tests, [
-  run_tests/0
+  run_tests/0, run_tests/1, run_tests/2
 ]).
 
 :- use_module(cbor, [
