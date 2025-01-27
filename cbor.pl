@@ -1,5 +1,10 @@
+/**
+  Consider reading documentation for cbor/1 before
+  using the main predicate cbor_item//2.
+*/
 :- module(cbor, [
-  cbor_item//1, cbor//1
+  cbor/1,
+  cbor_item//1
 ]).
 
 :- use_module(library(dcgs), [seq//1]).
@@ -14,7 +19,69 @@
 :- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(lists), [foldl/4, length/2]).
 
-cbor(X) --> cbor_item(X).
+%% cbor(?Item) is semidet. % doc(cbor/1).
+%
+%  Is true if cbor_item(Item) describes
+%  a well-formed CBOR encoded byte list.
+%  In more pratical terms,
+%  if `cbor(Item)` then `phrase(cbor_item(Item), Bytes)` is true
+%  and `Bytes` is a list of bytes which
+%  is a well-formed CBOR and encodes `Item`.
+%
+%  Each clause maps a functor of a CBOR Item
+%  to one Major Type from CBOR specification.
+%  The exhaustive list:
+%    * `unsigned(_, _)` maps to Major Type 0 (unsigned integer)
+%    * `negative(_, _)` maps to Major Type 1 (negative integer)
+%    * `bytes(_, _)`    maps to Major Type 2 (byte string)
+%    * `text(_, _)`     maps to Major Type 3 (text string (utf8))
+%    * `array(_, _)`    maps to Major Type 4 (array of items)
+%    * `map(_, _)`      maps to Major Type 5 (map of pairs of item)
+%    * `tag(_, _)`      maps to Major Type 6 (tagged item)
+%    * `simple(_, _)`   maps to Major Type 7 (simple values)
+%    * `float(_, _)`    maps to Major Type 7 (floating point numbers)
+%
+%  The predicate `cbor/1` is provided for both:
+%    1. checking/completing/generating a well-formed CBOR Item.
+%    2. documenting which CBOR Items `cbor_item//1` accepts.
+%      Note that `cbor_item//1` also describes not well-formed CBOR Items,
+%      in order to support reading partial information from
+%      a not well-formed CBOR,
+%      for more information see documentation for `cbor_item//1`.
+%
+%  The representation used in this library for a CBOR item
+%  maps one-to-one to a byte encoding of certain CBOR Value.
+%  A CBOR Value may have multiple byte representations,
+%  for instance the value 1
+%  may be represented in any of the following ways:
+%    * [0x01]
+%    * [0x18, 0x01]
+%    * [0x19, 0x00, 0x01]
+%    * [0x1a, 0x00, 0x00, 0x00, 0x01]
+%    * [0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
+%  This library uses one representation for each byte encoding.
+%
+%  For further describing the representation
+%  we will use the predicate `place_value/2`.
+%  The predicate `place_value(P, V)` is true
+%  when the value `V` is possible to be held
+%  in the place `P`.
+%  `V` is the value of a major type,
+%  it may be part or the entirety of the value of the item
+%  (for unsigned, negative, tag and simple/float)
+%  or some length used to find the value of the item
+%  (for byte string, byte string, array and map).
+%  `P` is where `V` lies in the byte encoding.
+
+%  TODO
+
+cbor(unsigned(P, X)) :- place_value(P, X).
+
+place_value(i , V) :- V in 00..23.
+place_value(x1, V) :- byte(V).
+place_value(x2, V) :- short(V).
+place_value(x3, V) :- word(V).
+place_value(x4, V) :- quad(V).
 
 cbor_pair(K-V) --> cbor_item(K), cbor_item(V).
 
@@ -88,56 +155,56 @@ cbor_major_value_x(5, Value, X) --> cbor_5_value_x(Value, X).
 cbor_major_value_x(6, Value, X) --> cbor_6_value_x(Value, X).
 cbor_major_value_x(7, Value, X) --> cbor_7_value_x(Value, X).
 
-cbor_0_value_x(val(M, V), unsigned(M, V)) --> [].
+cbor_0_value_x(val(P, V), unsigned(P, V)) --> [].
 % Not well-formed: 0x00 + 28 = 28
 cbor_0_value_x(reserved(28), nwf(28)) --> [].
 cbor_0_value_x(reserved(29), nwf(29)) --> [].
 cbor_0_value_x(reserved(30), nwf(30)) --> [].
 cbor_0_value_x(indefinite, nwf(31)) --> [].
 
-cbor_1_value_x(val(M, V), negative(M, X)) --> { #X #< 0, #X #= \ #V, #X + #V #= -1 }.
+cbor_1_value_x(val(P, V), negative(P, X)) --> { #X #< 0, #X #= \ #V, #X + #V #= -1 }.
 % Not well-formed: 0x20 + 28 = 60
 cbor_1_value_x(reserved(28), nwf(60)) --> [].
 cbor_1_value_x(reserved(29), nwf(61)) --> [].
 cbor_1_value_x(reserved(30), nwf(62)) --> [].
 cbor_1_value_x(indefinite, nwf(63)) --> [].
 
-cbor_2_value_x(val(M, V), bytes(len(M, V), X)) --> numberbytes_list(V, X).
+cbor_2_value_x(val(P, V), bytes(len(P, V), X)) --> numberbytes_list(V, X).
 % Not well-formed: 0x40 + 28 = 92
 cbor_2_value_x(reserved(28), nwf(92)) --> [].
 cbor_2_value_x(reserved(29), nwf(93)) --> [].
 cbor_2_value_x(reserved(30), nwf(94)) --> [].
 cbor_2_value_x(indefinite, bytes(*, X)) --> indefinite_bytes(X).
 
-cbor_3_value_x(val(M, V), text(len(M, V), X)) --> numberbytes_text(V, X).
+cbor_3_value_x(val(P, V), text(len(P, V), X)) --> numberbytes_text(V, X).
 % Not well-formed: 0x60 + 28 = 124
 cbor_3_value_x(reserved(28), nwf(124)) --> [].
 cbor_3_value_x(reserved(29), nwf(125)) --> [].
 cbor_3_value_x(reserved(30), nwf(126)) --> [].
 cbor_3_value_x(indefinite, text(*, X)) --> indefinite_text(X).
 
-cbor_4_value_x(val(M, V), array(len(M, V), X)) --> numberbytes_array(V, X).
+cbor_4_value_x(val(P, V), array(len(P, V), X)) --> numberbytes_array(V, X).
 % Not well-formed: 0x80 + 28 = 156
 cbor_4_value_x(reserved(28), nwf(156)) --> [].
 cbor_4_value_x(reserved(29), nwf(157)) --> [].
 cbor_4_value_x(reserved(30), nwf(158)) --> [].
 cbor_4_value_x(indefinite, array(*, X)) --> indefinite_array(X).
 
-cbor_5_value_x(val(M, V), map(len(M, V), X)) --> numberbytes_map(V, X).
+cbor_5_value_x(val(P, V), map(len(P, V), X)) --> numberbytes_map(V, X).
 % Not well-formed: 0xa0 + 28 = 188
 cbor_5_value_x(reserved(28), nwf(188)) --> [].
 cbor_5_value_x(reserved(29), nwf(189)) --> [].
 cbor_5_value_x(reserved(30), nwf(190)) --> [].
 cbor_5_value_x(indefinite, map(*, X)) --> indefinite_map(X).
 
-cbor_6_value_x(val(M, V), tag(tag(M, V), X)) --> cbor_item(X).
+cbor_6_value_x(val(P, V), tag(tag(P, V), X)) --> cbor_item(X).
 % Not well-formed: 0xc0 + 28 = 220
 cbor_6_value_x(reserved(28), nwf(220)) --> [].
 cbor_6_value_x(reserved(29), nwf(221)) --> [].
 cbor_6_value_x(reserved(30), nwf(222)) --> [].
 cbor_6_value_x(indefinite,   nwf(223)) --> [].
 
-cbor_7_value_x(val(A, V), X) --> { simple_or_float(A, V, X) }.
+cbor_7_value_x(val(P, V), X) --> { simple_or_float(P, V, X) }.
 % Not well-formed: 0xe0 + 28 = 252
 cbor_7_value_x(reserved(28), nwf(252)) --> [].
 cbor_7_value_x(reserved(29), nwf(253)) --> [].
@@ -155,25 +222,25 @@ numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
 numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).
 
 indefinite_bytes(X) --> cbor_item(Item), indefinite_help_(Item, X, bytes_uni, indefinite_bytes).
-bytes_uni(unsigned(M, V), nwf(unsigned(M, V))).
-bytes_uni(negative(M, V), nwf(negative(M, V))).
+bytes_uni(unsigned(P, V), nwf(unsigned(P, V))).
+bytes_uni(negative(P, V), nwf(negative(P, V))).
 bytes_uni(text(    L, V), nwf(bytes(   L, V))).
 bytes_uni(array(   L, V), nwf(array(   L, V))).
 bytes_uni(map(     L, V), nwf(map(     L, V))).
 bytes_uni(tag(     T, V), nwf(tag(     T, V))).
-bytes_uni(simple(  M, V), nwf(simple(  M, V))).
+bytes_uni(simple(  P, V), nwf(simple(  P, V))).
 bytes_uni(float(   S, V), nwf(float(   S, V))).
 bytes_uni(nwf(Byte)     , nwf(nwf(Byte))).
 bytes_uni(bytes(L, V), A) :- len_uni_(L, bytes(L, V), A).
 
 indefinite_text(X) --> cbor_item(Item), indefinite_help_(Item, X, text_uni, indefinite_text).
-text_uni(unsigned(M, V), nwf(unsigned(M, V))).
-text_uni(negative(M, V), nwf(negative(M, V))).
+text_uni(unsigned(P, V), nwf(unsigned(P, V))).
+text_uni(negative(P, V), nwf(negative(P, V))).
 text_uni(bytes(   L, V), nwf(bytes(   L, V))).
 text_uni(array(   L, V), nwf(array(   L, V))).
 text_uni(map(     L, V), nwf(map(     L, V))).
 text_uni(tag(     T, V), nwf(tag(     T, V))).
-text_uni(simple(  M, V), nwf(simple(  M, V))).
+text_uni(simple(  P, V), nwf(simple(  P, V))).
 text_uni(float(   S, V), nwf(float(   S, V))).
 text_uni(nwf(Byte)     , nwf(nwf(Byte))).
 text_uni(text(L, V), A) :- len_uni_(L, text(L, V), A).
@@ -189,14 +256,14 @@ map_uni(Val, Key, Key-Val).
 
 :- meta_predicate(indefinite_help_(?, ?, 2, 3, 5, ?, ?)).
 
-indefinite_help_(unsigned(M, V), [Item | X], In_Out, DCG) --> { call(In_Out, unsigned(M, V), Item) }, call(DCG, X).
-indefinite_help_(negative(M, V), [Item | X], In_Out, DCG) --> { call(In_Out, negative(M, V), Item) }, call(DCG, X).
+indefinite_help_(unsigned(P, V), [Item | X], In_Out, DCG) --> { call(In_Out, unsigned(P, V), Item) }, call(DCG, X).
+indefinite_help_(negative(P, V), [Item | X], In_Out, DCG) --> { call(In_Out, negative(P, V), Item) }, call(DCG, X).
 indefinite_help_(bytes(   L, V), [Item | X], In_Out, DCG) --> { call(In_Out, bytes(   L, V), Item) }, call(DCG, X).
 indefinite_help_(text(    L, V), [Item | X], In_Out, DCG) --> { call(In_Out, text(    L, V), Item) }, call(DCG, X).
 indefinite_help_(array(   L, V), [Item | X], In_Out, DCG) --> { call(In_Out, array(   L, V), Item) }, call(DCG, X).
 indefinite_help_(map(     L, V), [Item | X], In_Out, DCG) --> { call(In_Out, map(     L, V), Item) }, call(DCG, X).
 indefinite_help_(tag(     T, V), [Item | X], In_Out, DCG) --> { call(In_Out, tag(     T, V), Item) }, call(DCG, X).
-indefinite_help_(simple(  M, V), [Item | X], In_Out, DCG) --> { call(In_Out, simple(  M, V), Item) }, call(DCG, X).
+indefinite_help_(simple(  P, V), [Item | X], In_Out, DCG) --> { call(In_Out, simple(  P, V), Item) }, call(DCG, X).
 indefinite_help_(float(   S, V), [Item | X], In_Out, DCG) --> { call(In_Out, float(   S, V), Item) }, call(DCG, X).
 indefinite_help_(nwf(Byte)     , [Item | X], In_Out, DCG) --> { call(In_Out, nwf(Byte)     , Item) }, call(DCG, X).
 indefinite_help_(break         , [], _, _) --> [].
