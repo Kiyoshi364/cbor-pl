@@ -2,4 +2,6 @@
 
 set -xe
 
-scryer-prolog --no-add-history -f -g run_tests tests.pl </dev/null
+Goal='run_tests'
+
+time scryer-prolog --no-add-history -f -g $Goal tests.pl </dev/null
