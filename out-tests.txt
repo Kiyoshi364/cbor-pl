@@ -31,5 +31,5 @@ Skipping test_rfc8949_map_indefinite_funtrue_amtm2_encode
 cbor_tests:test_rfc8949_map_indefinite_funtrue_amtm2_encode failed!
 
 20 tests failed!
-170 tests passed.
+163 tests passed.
 67 tests not well-behaved deterministic supreessed.

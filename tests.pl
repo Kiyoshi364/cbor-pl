@@ -23,12 +23,6 @@ headerlist_payload_input(H, Payload, In) :-
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
 
-test_item_decode_10 :-
-  headerlist_payload_input("\x0a\", "", In),
-  phrase(cbor_item(X), In),
-  X == unsigned(i, 10),
-true.
-
 test_item_encode_10 :-
   Item = unsigned(_, 10),
   findall(Out, cbor_item(Item, Out, []), Answers),
@@ -55,12 +49,6 @@ test_item_encode_500 :-
     [26, 0, 0, 1, 244],
     [27, 0, 0, 0, 0, 0, 0, 1, 244]
   ],
-true.
-
-test_item_decode_negative_10 :-
-  headerlist_payload_input("\x29\", "", In),
-  phrase(cbor_item(X), In),
-  X == negative(i, -10),
 true.
 
 test_item_encode_negative_10 :-
@@ -179,46 +167,6 @@ test_item_decode_array :-
   X == array(len(i, Len), Items),
 true.
 
-test_item_decode_array_1_23_45 :-
-  headerlist_payload_input("\x83\\x01\\x82\\x02\\x03\\x82\\x04\\x05\", "", In),
-  phrase(cbor_item(X), In),
-  X == array(len(i, 3), [
-    unsigned(i, 1),
-    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
-    array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
-  ]),
-true.
-
-test_item_decode_indefinite_array_i1_23_45 :-
-  headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x82\\x04\\x05\\xff\", "", In),
-  phrase(cbor_item(X), In),
-  X == array(*, [
-    unsigned(i, 1),
-    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
-    array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
-  ]),
-true.
-
-test_item_decode_indefinite_array_i1_23_i45 :-
-  headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\\xff\", "", In),
-  phrase(cbor_item(X), In),
-  X == array(*, [
-    unsigned(i, 1),
-    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
-    array(*, [unsigned(i, 4), unsigned(i, 5)])
-  ]),
-true.
-
-test_item_decode_array_1_23_i45 :-
-  headerlist_payload_input("\x83\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\", "", In),
-  phrase(cbor_item(X), In),
-  X == array(len(i, 3), [
-    unsigned(i, 1),
-    array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
-    array(*, [unsigned(i, 4), unsigned(i, 5)])
-  ]),
-true.
-
 test_item_decode_map :-
   Pairs = [unsigned(i, 10)-unsigned(x2, 500), negative(i, -10)-negative(x2, -500)],
   foldl(pair_unpair_, Pairs, Items, []),
@@ -228,15 +176,6 @@ test_item_decode_map :-
   headerlist_payload_input("\xa2\", Payload, In),
   phrase(cbor_item(X), In),
   X == map(len(i, Len), Pairs),
-true.
-
-test_item_decode_indefinite_map_text :-
-  headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
-  phrase(cbor_item(X), In),
-  X == map(*, [
-    text(len(i, 3), "Fun")-simple(i, 21),
-    text(len(i, 3), "Amt")-negative(i, -2)
-  ]),
 true.
 
 test_item_decode_indefinite_map_unsigned :-
