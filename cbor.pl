@@ -18,6 +18,7 @@
 ]).
 :- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(lists), [foldl/4, length/2]).
+:- use_module(library(dif), [dif/2]).
 
 %% cbor(?Item) is semidet. % doc(cbor/1).
 %
@@ -221,52 +222,24 @@ numberbytes_text(N, T) --> numberbytes_list(N, L), { chars_utf8bytes(T, L) }.
 numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
 numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).
 
-indefinite_bytes(X) --> cbor_item(Item), indefinite_help_(Item, X, bytes_uni, indefinite_bytes).
-bytes_uni(unsigned(P, V), nwf(unsigned(P, V))).
-bytes_uni(negative(P, V), nwf(negative(P, V))).
-bytes_uni(text(    L, V), nwf(bytes(   L, V))).
-bytes_uni(array(   L, V), nwf(array(   L, V))).
-bytes_uni(map(     L, V), nwf(map(     L, V))).
-bytes_uni(tag(     T, V), nwf(tag(     T, V))).
-bytes_uni(simple(  P, V), nwf(simple(  P, V))).
-bytes_uni(float(   S, V), nwf(float(   S, V))).
-bytes_uni(nwf(Byte)     , nwf(nwf(Byte))).
-bytes_uni(bytes(L, V), A) :- len_uni_(L, bytes(L, V), A).
+indefinite_bytes(X) --> indefinite_help_(X, bytes_uni, indefinite_bytes).
+bytes_uni(bytes(L, V), bytes(L, V)) :- L = len(_, _).
+bytes_uni(nwf(A), A).
 
-indefinite_text(X) --> cbor_item(Item), indefinite_help_(Item, X, text_uni, indefinite_text).
-text_uni(unsigned(P, V), nwf(unsigned(P, V))).
-text_uni(negative(P, V), nwf(negative(P, V))).
-text_uni(bytes(   L, V), nwf(bytes(   L, V))).
-text_uni(array(   L, V), nwf(array(   L, V))).
-text_uni(map(     L, V), nwf(map(     L, V))).
-text_uni(tag(     T, V), nwf(tag(     T, V))).
-text_uni(simple(  P, V), nwf(simple(  P, V))).
-text_uni(float(   S, V), nwf(float(   S, V))).
-text_uni(nwf(Byte)     , nwf(nwf(Byte))).
-text_uni(text(L, V), A) :- len_uni_(L, text(L, V), A).
+indefinite_text(X) --> indefinite_help_(X, text_uni, indefinite_text).
+text_uni(text(L, V), text(L, V)) :- L = len(_, _).
+text_uni(nwf(A), A).
 
-len_uni_(len(_, _), A, A).
-len_uni_(*, A, nwf(A)).
+indefinite_array(X) --> indefinite_help_(X, =, indefinite_array).
 
-indefinite_array(X) --> cbor_item(Item), indefinite_help_(Item, X, =, indefinite_array).
-
-indefinite_map(X) --> cbor_item(Item), indefinite_help_(Item, X, map_uni(Val), indefinite_map_(Val)).
+indefinite_map(X) --> indefinite_help_(X, map_uni(Val), indefinite_map_(Val)).
 indefinite_map_(Val, X) --> cbor_item(Val), indefinite_map(X).
-map_uni(Val, Key, Key-Val).
+map_uni(Val, Key-Val, Key).
 
-:- meta_predicate(indefinite_help_(?, ?, 2, 3, 5, ?, ?)).
+:- meta_predicate(indefinite_help_(?, 2, 3, ?, ?)).
 
-indefinite_help_(unsigned(P, V), [Item | X], In_Out, DCG) --> { call(In_Out, unsigned(P, V), Item) }, call(DCG, X).
-indefinite_help_(negative(P, V), [Item | X], In_Out, DCG) --> { call(In_Out, negative(P, V), Item) }, call(DCG, X).
-indefinite_help_(bytes(   L, V), [Item | X], In_Out, DCG) --> { call(In_Out, bytes(   L, V), Item) }, call(DCG, X).
-indefinite_help_(text(    L, V), [Item | X], In_Out, DCG) --> { call(In_Out, text(    L, V), Item) }, call(DCG, X).
-indefinite_help_(array(   L, V), [Item | X], In_Out, DCG) --> { call(In_Out, array(   L, V), Item) }, call(DCG, X).
-indefinite_help_(map(     L, V), [Item | X], In_Out, DCG) --> { call(In_Out, map(     L, V), Item) }, call(DCG, X).
-indefinite_help_(tag(     T, V), [Item | X], In_Out, DCG) --> { call(In_Out, tag(     T, V), Item) }, call(DCG, X).
-indefinite_help_(simple(  P, V), [Item | X], In_Out, DCG) --> { call(In_Out, simple(  P, V), Item) }, call(DCG, X).
-indefinite_help_(float(   S, V), [Item | X], In_Out, DCG) --> { call(In_Out, float(   S, V), Item) }, call(DCG, X).
-indefinite_help_(nwf(Byte)     , [Item | X], In_Out, DCG) --> { call(In_Out, nwf(Byte)     , Item) }, call(DCG, X).
-indefinite_help_(break         , [], _, _) --> [].
+indefinite_help_([], _, _) --> cbor_item(break).
+indefinite_help_([V | X], Out_In, DCG) --> { call(cbor:Out_In, V, Item), dif(Item, break) }, cbor_item(Item), call(cbor:DCG, X).
 
 simple_or_float(i, V, simple(i, V)) :- V in 0..23.
 simple_or_float(x1, V, S) :-

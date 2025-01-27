@@ -95,6 +95,7 @@ test_item_decode_500_bytes :-
   X == bytes(len(x2, Len), Payload),
 true.
 
+nwdet(test_item_decode_bytes_indefinite).
 test_item_decode_bytes_indefinite :-
   headerlist_payload_input("\x5f\\x44\\xaa\\xbb\\xcc\\xdd\\x43\\xee\\xff\\x99\\xff\", "", In),
   phrase(cbor_item(X), In),
@@ -148,6 +149,7 @@ test_item_decode_text_utf8_medium :-
   X == text(len(x1, PLen), Text),
 true.
 
+nwdet(test_item_decode_text_indefinite).
 test_item_decode_text_indefinite :-
   headerlist_payload_input("\x7f\\x63\\x61\\x62\\x63\\x62\\x30\\x31\\xff\", "", In),
   phrase(cbor_item(X), In),
@@ -178,6 +180,7 @@ test_item_decode_map :-
   X == map(len(i, Len), Pairs),
 true.
 
+nwdet(test_item_decode_indefinite_map_unsigned).
 test_item_decode_indefinite_map_unsigned :-
   headerlist_payload_input("\xbf\\x20\\xf5\\x01\\x21\\xff\", "", In),
   phrase(cbor_item(X), In),
@@ -1303,6 +1306,7 @@ test_rfc8949_map_aA_bB_cC_dD_eE_encode :-
   meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_bytes_indefinite_h0102_h030405_decode).
 test_rfc8949_bytes_indefinite_h0102_h030405_decode :-
   headerlist_payload_input("\x5f\\x42\\x01\\x02\\x43\\x03\\x04\\x05\\xff\", "", In),
   Out = bytes(*, [
@@ -1319,13 +1323,10 @@ test_rfc8949_bytes_indefinite_h0102_h030405_encode :-
     bytes(len(i, 2), [0x01, 0x02]),
     bytes(len(i, 3), [0x03, 0x04, 0x05])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_bytes_indefinite_h0102_h030405_encode takes too long
-  writen('Skipping test_rfc8949_bytes_indefinite_h0102_h030405_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_text_indefinite_strea_ming_decode).
 test_rfc8949_text_indefinite_strea_ming_decode :-
   headerlist_payload_input("\x7f\\x65\\x73\\x74\\x72\\x65\\x61\\x64\\x6d\\x69\\x6e\\x67\\xff\", "", In),
   Out = text(*, [
@@ -1342,13 +1343,10 @@ test_rfc8949_text_indefinite_strea_ming_encode :-
     text(len(i, 5), "strea"),
     text(len(i, 4), "ming")
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_text_indefinite_strea_ming_encode takes too long
-  writen('Skipping test_rfc8949_text_indefinite_strea_ming_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_indefinite__decode).
 test_rfc8949_array_indefinite__decode :-
   headerlist_payload_input("\x9f\\xff\", "", In),
   Out = array(*, []),
@@ -1359,13 +1357,10 @@ nwdet(test_rfc8949_array_indefinite__encode).
 test_rfc8949_array_indefinite__encode :-
   headerlist_payload_input("\x9f\\xff\", "", In),
   Out = array(*, []),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_indefinite__encode takes too long
-  writen('Skipping test_rfc8949_array_indefinite__encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_indefinite_1_23_i45_decode).
 test_rfc8949_array_indefinite_1_23_i45_decode :-
   headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\\xff\", "", In),
   Out = array(*, [
@@ -1384,13 +1379,10 @@ test_rfc8949_array_indefinite_1_23_i45_encode :-
     array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
     array(*, [unsigned(i, 4), unsigned(i, 5)])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_indefinite_1_23_i45_encode takes too long
-  writen('Skipping test_rfc8949_array_indefinite_1_23_i45_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_indefinite_1_23_45_decode).
 test_rfc8949_array_indefinite_1_23_45_decode :-
   headerlist_payload_input("\x9f\\x01\\x82\\x02\\x03\\x82\\x04\\x05\\xff\", "", In),
   Out = array(*, [
@@ -1409,13 +1401,10 @@ test_rfc8949_array_indefinite_1_23_45_encode :-
     array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
     array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_indefinite_1_23_45_encode takes too long
-  writen('Skipping test_rfc8949_array_indefinite_1_23_45_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_1_23_i45_decode).
 test_rfc8949_array_1_23_i45_decode :-
   headerlist_payload_input("\x83\\x01\\x82\\x02\\x03\\x9f\\x04\\x05\\xff\", "", In),
   Out = array(len(i, 3), [
@@ -1434,13 +1423,10 @@ test_rfc8949_array_1_23_i45_encode :-
     array(len(i, 2), [unsigned(i, 2), unsigned(i, 3)]),
     array(*, [unsigned(i, 4), unsigned(i, 5)])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_1_23_i45_encode takes too long
-  writen('Skipping test_rfc8949_array_1_23_i45_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_1_i23_45_decode).
 test_rfc8949_array_1_i23_45_decode :-
   headerlist_payload_input("\x83\\x01\\x9f\\x02\\x03\\xff\\x82\\x04\\x05\", "", In),
   Out = array(len(i, 3), [
@@ -1459,13 +1445,10 @@ test_rfc8949_array_1_i23_45_encode :-
     array(*, [unsigned(i, 2), unsigned(i, 3)]),
     array(len(i, 2), [unsigned(i, 4), unsigned(i, 5)])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_1_i23_45_encode takes too long
-  writen('Skipping test_rfc8949_array_1_i23_45_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_indefinite_1ddd25_decode).
 test_rfc8949_array_indefinite_1ddd25_decode :-
   headerlist_payload_input("\x9f\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x09\\x0a\\x0b\\x0c\\x0d\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x18\\x18\\x19\\xff\", "", In),
   Out = array(*, [
@@ -1488,13 +1471,10 @@ test_rfc8949_array_indefinite_1ddd25_encode :-
     unsigned(i, 16), unsigned(i, 17), unsigned(i, 18), unsigned(i, 19), unsigned(i, 20),
     unsigned(i, 21), unsigned(i, 22), unsigned(i, 23), unsigned(x1, 24), unsigned(x1, 25)
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_indefinite_1ddd25_encode takes too long
-  writen('Skipping test_rfc8949_array_indefinite_1ddd25_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_map_indefinite_a1_bi23_decode).
 test_rfc8949_map_indefinite_a1_bi23_decode :-
   headerlist_payload_input("\xbf\\x61\\x61\\x01\\x61\\x62\\x9f\\x02\\x03\\xff\\xff\", "", In),
   Out = map(*, [
@@ -1515,13 +1495,10 @@ test_rfc8949_map_indefinite_a1_bi23_encode :-
       unsigned(i, 2), unsigned(i, 3)
     ])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_map_indefinite_a1_bi23_encode takes too long
-  writen('Skipping test_rfc8949_map_indefinite_a1_bi23_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_array_a_ibc_decode).
 test_rfc8949_array_a_ibc_decode :-
   headerlist_payload_input("\x82\\x61\\x61\\xbf\\x61\\x62\\x61\\x63\\xff\", "", In),
   Out = array(len(i, 2), [
@@ -1538,13 +1515,10 @@ test_rfc8949_array_a_ibc_encode :-
     text(len(i, 1), "a"),
     map(*, [text(len(i, 1), "b")-text(len(i, 1), "c")])
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_array_a_ibc_encode takes too long
-  writen('Skipping test_rfc8949_array_a_ibc_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
+nwdet(test_rfc8949_map_indefinite_funtrue_amtm2_decode).
 test_rfc8949_map_indefinite_funtrue_amtm2_decode :-
   headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
   Out = map(*, [
@@ -1561,11 +1535,7 @@ test_rfc8949_map_indefinite_funtrue_amtm2_encode :-
     text(len(i, 3), "Fun")-simple(i, 21),
     text(len(i, 3), "Amt")-negative(i, -2)
   ]),
-  % meta_test_rfc8949_encode(In, Out),
-  % test_rfc8949_map_indefinite_funtrue_amtm2_encode takes too long
-  writen('Skipping test_rfc8949_map_indefinite_funtrue_amtm2_encode'),
-  false,
-  In == Out,
+  meta_test_rfc8949_encode(In, Out),
 true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) End   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
