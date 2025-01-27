@@ -1523,7 +1523,7 @@ test_rfc8949_map_indefinite_a1_bi23_encode :-
 true.
 
 test_rfc8949_array_a_ibc_decode :-
-  headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
+  headerlist_payload_input("\x82\\x61\\x61\\xbf\\x61\\x62\\x61\\x63\\xff\", "", In),
   Out = array(len(i, 2), [
     text(len(i, 1), "a"),
     map(*, [text(len(i, 1), "b")-text(len(i, 1), "c")])
@@ -1533,7 +1533,7 @@ true.
 
 nwdet(test_rfc8949_array_a_ibc_encode).
 test_rfc8949_array_a_ibc_encode :-
-  headerlist_payload_input("\xbf\\x63\\x46\\x75\\x6e\\xf5\\x63\\x41\\x6d\\x74\\x21\\xff\", "", In),
+  headerlist_payload_input("\x82\\x61\\x61\\xbf\\x61\\x62\\x61\\x63\\xff\", "", In),
   Out = array(len(i, 2), [
     text(len(i, 1), "a"),
     map(*, [text(len(i, 1), "b")-text(len(i, 1), "c")])

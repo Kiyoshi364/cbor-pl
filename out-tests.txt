@@ -24,12 +24,11 @@ Skipping test_rfc8949_array_indefinite_1ddd25_encode
 cbor_tests:test_rfc8949_array_indefinite_1ddd25_encode failed!
 Skipping test_rfc8949_map_indefinite_a1_bi23_encode
 cbor_tests:test_rfc8949_map_indefinite_a1_bi23_encode failed!
-cbor_tests:test_rfc8949_array_a_ibc_decode failed!
 Skipping test_rfc8949_array_a_ibc_encode
 cbor_tests:test_rfc8949_array_a_ibc_encode failed!
 Skipping test_rfc8949_map_indefinite_funtrue_amtm2_encode
 cbor_tests:test_rfc8949_map_indefinite_funtrue_amtm2_encode failed!
 
-20 tests failed!
-163 tests passed.
+19 tests failed!
+164 tests passed.
 67 tests not well-behaved deterministic supreessed.
