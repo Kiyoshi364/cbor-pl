@@ -82,6 +82,21 @@ test_item_encode_negative_500 :-
   ],
 true.
 
+test_item_decode_negative_18446744073709551615 :-
+  headerlist_payload_input("\x3b\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfe\", "", In),
+  phrase(cbor_item(X), In),
+  X == negative(x8, -18446744073709551615),
+  cbor(X),
+true.
+
+nwdet(test_item_encode_negative_18446744073709551615).
+test_item_encode_negative_18446744073709551615 :-
+  Item = negative(x8, -18446744073709551615),
+  headerlist_payload_input("\x3b\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfe\", "", In),
+  phrase(cbor_item(Item), Answer),
+  Answer == In,
+true.
+
 test_item_decode_5_bytes :-
   Len = 5,
   length(Payload, Len),
