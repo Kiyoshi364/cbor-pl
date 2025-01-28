@@ -434,14 +434,14 @@ true.
 
 test_rfc8949_negative_18446744073709551616_decode :-
   headerlist_payload_input("\x3b\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\", "", In),
-  Out = unsigned(x8, -18446744073709551616),
+  Out = negative(x8, -18446744073709551616),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_negative_18446744073709551616_encode).
 test_rfc8949_negative_18446744073709551616_encode :-
   headerlist_payload_input("\x3b\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\", "", In),
-  Out = unsigned(x8, -18446744073709551616),
+  Out = negative(x8, -18446744073709551616),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -577,14 +577,14 @@ true.
 
 test_rfc8949_float_1d1_decode :-
   headerlist_payload_input("\xfb\\x3f\\xf1\\x99\\x99\\x99\\x99\\x99\\x9a\", "", In),
-  Out = float(x4, 0x3ff199999999999a),
+  Out = float(x8, 0x3ff199999999999a),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_1d1_encode).
 test_rfc8949_float_1d1_encode :-
   headerlist_payload_input("\xfb\\x3f\\xf1\\x99\\x99\\x99\\x99\\x99\\x9a\", "", In),
-  Out = float(x4, 0x3ff199999999999a),
+  Out = float(x8, 0x3ff199999999999a),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -718,14 +718,14 @@ true.
 
 test_rfc8949_float_negative_4d1_decode :-
   headerlist_payload_input("\xfb\\xc0\\x10\\x66\\x66\\x66\\x66\\x66\\x66\", "", In),
-  Out = float(x4, 0xc010666666666666),
+  Out = float(x8, 0xc010666666666666),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_negative_4d1_encode).
 test_rfc8949_float_negative_4d1_encode :-
   headerlist_payload_input("\xfb\\xc0\\x10\\x66\\x66\\x66\\x66\\x66\\x66\", "", In),
-  Out = float(x4, 0xc010666666666666),
+  Out = float(x8, 0xc010666666666666),
   meta_test_rfc8949_encode(In, Out),
 true.
 
