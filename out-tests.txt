@@ -1,9 +1,2 @@
-cbor_tests:test_item_decode_negative_18446744073709551615 failed!
-cbor_tests:test_rfc8949_18446744073709551615_decode failed!
-cbor_tests:test_rfc8949_negative_18446744073709551616_decode failed!
-cbor_tests:test_rfc8949_float_negative_4d1_decode failed!
-cbor_tests:test_rfc8949_float_negative_infinity_x8_decode failed!
-
-5 tests failed!
-180 tests passed.
+185 tests passed.
 96 tests not well-behaved deterministic supreessed.

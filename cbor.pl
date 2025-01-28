@@ -394,7 +394,11 @@ cbor_7_value_x(indefinite,   break) --> [].
 numbytes_number(1, X) --> byte(X).
 numbytes_number(2, X) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
 numbytes_number(4, X) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
-numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
+% NOTE: `X * (2 ^ (8 * 4))` and `X << (8 * 4)` have the same result,
+%  unless if `X in 0x80000000..0xffffffff`.
+%  This happens, because the result is interpreted as an negative 64bit number.
+
 
 numberbytes_list(N, L) --> { length(L, N) }, seq(L).
 numberbytes_text(N, T) --> numberbytes_list(N, L), { chars_utf8bytes(T, L) }.
