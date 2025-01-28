@@ -3,6 +3,7 @@
 ]).
 
 :- use_module(cbor, [
+  cbor/1,
   cbor_item//1
 ]).
 
@@ -39,6 +40,7 @@ test_item_decode_500 :-
   headerlist_payload_input("\x19\\x01\\xf4\", "", In),
   phrase(cbor_item(X), In),
   X == unsigned(x2, 500),
+  cbor(X),
 true.
 
 test_item_encode_500 :-
@@ -67,6 +69,7 @@ test_item_decode_negative_500 :-
   headerlist_payload_input("\x39\\x01\\xf3\", "", In),
   phrase(cbor_item(X), In),
   X == negative(x2, -500),
+  cbor(X),
 true.
 
 test_item_encode_negative_500 :-
@@ -85,6 +88,7 @@ test_item_decode_5_bytes :-
   headerlist_payload_input("\x45\", Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(len(i, Len), Payload),
+  cbor(X),
 true.
 
 test_item_decode_500_bytes :-
@@ -93,6 +97,7 @@ test_item_decode_500_bytes :-
   headerlist_payload_input("\x59\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(len(x2, Len), Payload),
+  cbor(X),
 true.
 
 nwdet(test_item_decode_bytes_indefinite).
@@ -103,6 +108,7 @@ test_item_decode_bytes_indefinite :-
     bytes(len(i, 4), [0xaa, 0xbb, 0xcc, 0xdd]),
     bytes(len(i, 3), [0xee, 0xff, 0x99])
   ]),
+  cbor(X),
 true.
 
 test_item_decode_text_ascii_small :-
@@ -113,6 +119,7 @@ test_item_decode_text_ascii_small :-
   headerlist_payload_input("\x6c\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(i, Len), Text),
+  cbor(X),
 true.
 
 test_item_decode_text_ascii_medium :-
@@ -123,6 +130,7 @@ test_item_decode_text_ascii_medium :-
   headerlist_payload_input("\x78\\x31\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(x1, Len), Text),
+  cbor(X),
 true.
 
 test_item_decode_text_utf8_small :-
@@ -135,6 +143,7 @@ test_item_decode_text_utf8_small :-
   headerlist_payload_input("\x77\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(i, PLen), Text),
+  cbor(X),
 true.
 
 test_item_decode_text_utf8_medium :-
@@ -147,6 +156,7 @@ test_item_decode_text_utf8_medium :-
   headerlist_payload_input("\x78\\x22\", Payload, In),
   phrase(cbor_item(X), In),
   X == text(len(x1, PLen), Text),
+  cbor(X),
 true.
 
 nwdet(test_item_decode_text_indefinite).
@@ -157,6 +167,7 @@ test_item_decode_text_indefinite :-
     text(len(i, 3), "abc"),
     text(len(i, 2), "01")
   ]),
+  cbor(X),
 true.
 
 test_item_decode_array :-
@@ -167,6 +178,7 @@ test_item_decode_array :-
   headerlist_payload_input("\x84\", Payload, In),
   phrase(cbor_item(X), In),
   X == array(len(i, Len), Items),
+  cbor(X),
 true.
 
 test_item_decode_map :-
@@ -178,6 +190,7 @@ test_item_decode_map :-
   headerlist_payload_input("\xa2\", Payload, In),
   phrase(cbor_item(X), In),
   X == map(len(i, Len), Pairs),
+  cbor(X),
 true.
 
 nwdet(test_item_decode_indefinite_map_unsigned).
@@ -188,6 +201,7 @@ test_item_decode_indefinite_map_unsigned :-
     negative(i, -1)-simple(i, 21),
     unsigned(i, 1)-negative(i, -2)
   ]),
+  cbor(X),
 true.
 
 test_item_decode_tag_small :-
@@ -197,6 +211,7 @@ test_item_decode_tag_small :-
   headerlist_payload_input("\xca\", Payload, In),
   phrase(cbor_item(X), In),
   X == tag(tag(i, TagNumber), Item),
+  cbor(X),
 true.
 
 test_item_decode_tag_big :-
@@ -206,18 +221,21 @@ test_item_decode_tag_big :-
   headerlist_payload_input("\xd9\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
   X == tag(tag(x2, TagNumber), Item),
+  cbor(X),
 true.
 
 test_item_decode_simple_small :-
   headerlist_payload_input("\xf4\", "", In),
   phrase(cbor_item(X), In),
   X == simple(i, 20),
+  cbor(X),
 true.
 
 test_item_decode_simple_big :-
   headerlist_payload_input("\xf8\\x78\", "", In),
   phrase(cbor_item(X), In),
   X == simple(x1, 120),
+  cbor(X),
 true.
 
 % TODO: add tests for floats
@@ -225,11 +243,13 @@ true.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 meta_test_rfc8949_encode(In, Out) :-
+  cbor(Out),
   meta_test_rfc8949_encode(In, Out, XIn), XIn == In.
 meta_test_rfc8949_encode(_, Out, XIn) :-
   phrase(cbor_item(Out), XIn).
 
 meta_test_rfc8949_decode(In, Out) :-
+  cbor(Out),
   meta_test_rfc8949_decode(In, Out, XOut), XOut == Out.
 meta_test_rfc8949_decode(In, _, XOut) :-
   phrase(cbor_item(XOut), In).
