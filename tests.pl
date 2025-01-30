@@ -225,7 +225,7 @@ test_item_decode_tag_small :-
   once(phrase(cbor_item(Item), Payload)),
   headerlist_payload_input("\xca\", Payload, In),
   phrase(cbor_item(X), In),
-  X == tag(tag(i, TagNumber), Item),
+  X == tag(i, TagNumber, Item),
   cbor(X),
 true.
 
@@ -235,7 +235,7 @@ test_item_decode_tag_big :-
   once(phrase(cbor_item(Item), Payload)),
   headerlist_payload_input("\xd9\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
-  X == tag(tag(x2, TagNumber), Item),
+  X == tag(x2, TagNumber, Item),
   cbor(X),
 true.
 
@@ -424,8 +424,7 @@ test_rfc8949_18446744073709551616_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc2\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   In = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-  Out = tag(
-    tag(i, 2),
+  Out = tag(i, 2,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ])
@@ -438,8 +437,7 @@ test_rfc8949_18446744073709551616_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc2\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   In = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-  Out = tag(
-    tag(i, 2),
+  Out = tag(i, 2,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ])
@@ -464,8 +462,7 @@ test_rfc8949_negative_18446744073709551617_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc3\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   In = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-  Out = tag(
-    tag(i, 3),
+  Out = tag(i, 3,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ])
@@ -478,8 +475,7 @@ test_rfc8949_negative_18446744073709551617_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc3\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   In = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-  Out = tag(
-    tag(i, 3),
+  Out = tag(i, 3,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ])
@@ -977,27 +973,27 @@ true.
 
 test_rfc8949_tag_0_2023d03d21T20c04c00Z_decode :-
   headerlist_payload_input("\xc0\\x74\\x32\\x30\\x31\\x33\\x2d\\x30\\x33\\x2d\\x32\\x31\\x54\\x32\\x30\\x3a\\x30\\x34\\x3a\\x30\\x30\\x5a\", "", In),
-  Out = tag(tag(i, 0), text(len(i, 20), "2013-03-21T20:04:00Z")),
+  Out = tag(i, 0, text(len(i, 20), "2013-03-21T20:04:00Z")),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_tag_0_2023d03d21T20c04c00Z_encode).
 test_rfc8949_tag_0_2023d03d21T20c04c00Z_encode :-
   headerlist_payload_input("\xc0\\x74\\x32\\x30\\x31\\x33\\x2d\\x30\\x33\\x2d\\x32\\x31\\x54\\x32\\x30\\x3a\\x30\\x34\\x3a\\x30\\x30\\x5a\", "", In),
-  Out = tag(tag(i, 0), text(len(i, 20), "2013-03-21T20:04:00Z")),
+  Out = tag(i, 0, text(len(i, 20), "2013-03-21T20:04:00Z")),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_tag_1_1363896240_decode :-
   headerlist_payload_input("\xc1\\x1a\\x51\\x4b\\x67\\xb0\", "", In),
-  Out = tag(tag(i, 1), unsigned(x4, 1363896240)),
+  Out = tag(i, 1, unsigned(x4, 1363896240)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_tag_1_1363896240_encode).
 test_rfc8949_tag_1_1363896240_encode :-
   headerlist_payload_input("\xc1\\x1a\\x51\\x4b\\x67\\xb0\", "", In),
-  Out = tag(tag(i, 1), unsigned(x4, 1363896240)),
+  Out = tag(i, 1, unsigned(x4, 1363896240)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -1005,7 +1001,7 @@ test_rfc8949_tag_1_1363896240d5_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   In = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
-  Out = tag(tag(i, 1), float(x8, 0x41d452d9ec200000)),
+  Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -1014,46 +1010,46 @@ test_rfc8949_tag_1_1363896240d5_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   In = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
-  Out = tag(tag(i, 1), float(x8, 0x41d452d9ec200000)),
+  Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_tag_23_h01020304_decode :-
   headerlist_payload_input("\xd7\\x44\\x01\\x02\\x03\\x04\", "", In),
-  Out = tag(tag(i, 23), bytes(len(i, 4), [0x01, 0x02, 0x03, 0x04])),
+  Out = tag(i, 23, bytes(len(i, 4), [0x01, 0x02, 0x03, 0x04])),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_tag_23_h01020304_encode).
 test_rfc8949_tag_23_h01020304_encode :-
   headerlist_payload_input("\xd7\\x44\\x01\\x02\\x03\\x04\", "", In),
-  Out = tag(tag(i, 23), bytes(len(i, 4), [0x01, 0x02, 0x03, 0x04])),
+  Out = tag(i, 23, bytes(len(i, 4), [0x01, 0x02, 0x03, 0x04])),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_tag_24_h6449455446_decode :-
   headerlist_payload_input("\xd8\\x18\\x45\\x64\\x49\\x45\\x54\\x46\", "", In),
-  Out = tag(tag(x1, 24), bytes(len(i, 5), [0x64, 0x49, 0x45, 0x54, 0x46])),
+  Out = tag(x1, 24, bytes(len(i, 5), [0x64, 0x49, 0x45, 0x54, 0x46])),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_tag_24_h6449455446_encode).
 test_rfc8949_tag_24_h6449455446_encode :-
   headerlist_payload_input("\xd8\\x18\\x45\\x64\\x49\\x45\\x54\\x46\", "", In),
-  Out = tag(tag(x1, 24), bytes(len(i, 5), [0x64, 0x49, 0x45, 0x54, 0x46])),
+  Out = tag(x1, 24, bytes(len(i, 5), [0x64, 0x49, 0x45, 0x54, 0x46])),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_tag_32_httpcsswwwdexampledcom_decode :-
   headerlist_payload_input("\xd8\\x20\\x76\\x68\\x74\\x74\\x70\\x3a\\x2f\\x2f\\x77\\x77\\x77\\x2e\\x65\\x78\\x61\\x6d\\x70\\x6c\\x65\\x2e\\x63\\x6f\\x6d\", "", In),
-  Out = tag(tag(x1, 32), text(len(i, 22), "http://www.example.com")),
+  Out = tag(x1, 32, text(len(i, 22), "http://www.example.com")),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_tag_32_httpcsswwwdexampledcom_encode).
 test_rfc8949_tag_32_httpcsswwwdexampledcom_encode :-
   headerlist_payload_input("\xd8\\x20\\x76\\x68\\x74\\x74\\x70\\x3a\\x2f\\x2f\\x77\\x77\\x77\\x2e\\x65\\x78\\x61\\x6d\\x70\\x6c\\x65\\x2e\\x63\\x6f\\x6d\", "", In),
-  Out = tag(tag(x1, 32), text(len(i, 22), "http://www.example.com")),
+  Out = tag(x1, 32, text(len(i, 22), "http://www.example.com")),
   meta_test_rfc8949_encode(In, Out),
 true.
 

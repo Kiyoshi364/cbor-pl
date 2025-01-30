@@ -39,7 +39,7 @@
 %    * `text(_, _)`     maps to Major Type 3 (text string (utf8))
 %    * `array(_, _)`    maps to Major Type 4 (array of items)
 %    * `map(_, _)`      maps to Major Type 5 (map of pairs of item)
-%    * `tag(_, _)`      maps to Major Type 6 (tagged item)
+%    * `tag(_, _, _)`   maps to Major Type 6 (tagged item)
 %    * `simple(_, _)`   maps to Major Type 7 (simple values)
 %    * `float(_, _)`    maps to Major Type 7 (floating point numbers)
 %
@@ -160,10 +160,10 @@ cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_c
 %
 %  # Major 6 -- Tagged Item
 %
-%  It is represented by `Tag(tag(P, T), X)`.
+%  It is represented by `tag(P, T, X)`.
 %  `T` is the tag residing in place `P` and
 %  `X` is the tagged item, a cbor item.
-cbor(tag(tag(P, T), X)) :- place_value(P, T), cbor(X).
+cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
 %
 %  # Major 7 -- Simple Values
 %
@@ -377,7 +377,7 @@ cbor_5_value_x(reserved(29), nwf(189)) --> [].
 cbor_5_value_x(reserved(30), nwf(190)) --> [].
 cbor_5_value_x(indefinite, map(*, X)) --> indefinite_map(X).
 
-cbor_6_value_x(val(P, V), tag(tag(P, V), X)) --> cbor_item(X).
+cbor_6_value_x(val(P, V), tag(P, V, X)) --> cbor_item(X).
 % Not well-formed: 0xc0 + 28 = 220
 cbor_6_value_x(reserved(28), nwf(220)) --> [].
 cbor_6_value_x(reserved(29), nwf(221)) --> [].
