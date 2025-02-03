@@ -24,11 +24,11 @@
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
 %
-%  Is true if cbor_item(Item) describes
+%  Is true if `cbor_item(Item)` describes
 %  a well-formed CBOR encoded byte list.
 %  In more pratical terms,
-%  if `cbor(Item)` then `phrase(cbor_item(Item), Bytes)` is true
-%  and `Bytes` is a list of bytes which
+%  if `cbor(Item)` then `phrase(cbor_item(Item), Chars)` is true
+%  and `Chars` is a list of bytes which
 %  is a well-formed CBOR and encodes `Item`.
 %
 %  Each clause maps a functor of a CBOR Item
@@ -85,26 +85,32 @@
 %  also `place_value(P, N)` must be true.
 %  In the second case `*`, the length is indefinite.
 %
-%  # Major 0 -- Unsigned
+% # Major 0 -- Unsigned
 %
 %  It is represented by `unsigned(P, X)`,
 %  `X` is the unsigned number itself and
 %  `P` is where `X` resides.
-cbor(unsigned(P, X)) :- place_value(P, X).
 %
-%  # Major 1 -- Negative
+%  ```prolog
+%    cbor(unsigned(P, X)) :- place_value(P, X).
+%  ```
+%
+% # Major 1 -- Negative
 %
 %  It is represented by `negative(P, X)`,
 %  `X` is the negative number itself and
 %  `P` is where `X` resides.
 %  `V` (in the implementation) is the value
 %  in the byte representation.
-cbor(negative(P, X)) :-
-  #X #< 0,
-  #X + #V #= -1,
-  place_value(P, V).
 %
-%  # Major 2 -- Byte String
+%  ```prolog
+%    cbor(negative(P, X)) :-
+%      #X #< 0,
+%      #X + #V #= -1,
+%      place_value(P, V).
+%  ```
+%
+% # Major 2 -- Byte String
 %
 %  It is represented by `bytes(L, X)`.
 %  `L` is a length indicator.
@@ -121,9 +127,8 @@ cbor(negative(P, X)) :-
 %    cbor(bytes(*, X)) :- maplist(definite_bytes, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
-cbor(bytes(L, X)) :- cbor_bytes(L, X).
 %
-%  # Major 3 -- Text String (UTF-8 encoded)
+% # Major 3 -- Text String (UTF-8 encoded)
 %
 %  It is represented by `text(L, X)`.
 %  `L` is a length indicator.
@@ -141,32 +146,40 @@ cbor(bytes(L, X)) :- cbor_bytes(L, X).
 %    cbor(text(*, X)) :- maplist(definite_text, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
-cbor(text(L, X)) :- cbor_text(L, X).
 %
-%  # Major 4 -- Array
+% # Major 4 -- Array
 %
 %  It is represented by `array(L, X)`.
 %  `L` is a length indicator and
 %  `X` is a list of cbor items.
-cbor(array(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
 %
-%  # Major 5 -- Map
+%  ```prolog
+%    cbor(array(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
+%  ```
+%
+% # Major 5 -- Map
 %
 %  It is represented by `map(L, X)`.
 %  `L` is a length indicator and
 %  `X` is a list of pairs of cbor items,
 %  in another words, each item is of the form `Key-Value` and
 %  both `Key` and `Value` are cbor items.
-cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
 %
-%  # Major 6 -- Tagged Item
+%  ```prolog
+%    cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
+%  ```
+%
+% # Major 6 -- Tagged Item
 %
 %  It is represented by `tag(P, T, X)`.
 %  `T` is the tag residing in place `P` and
 %  `X` is the tagged item, a cbor item.
-cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
 %
-%  # Major 7 -- Simple Values
+%  ```prolog
+%    cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
+%  ```
+%
+% # Major 7 -- Simple Values
 %
 %  It is represented by `simple(P, X)`.
 %  `X` is the simple value residing in place `P`.
@@ -178,9 +191,8 @@ cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
 %    cbor(simple(x1, X)) :- place_value(x1, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
-cbor(simple(P, X)) :- cbor_simple(P, X).
 %
-%  # Major 7 -- Floating Point Numbers
+% # Major 7 -- Floating Point Numbers
 %
 %  WARNING: `simple_value_float/3` is NOT IMPLEMENTED
 %    it currently unifies the second and third arguments.
@@ -202,6 +214,17 @@ cbor(simple(P, X)) :- cbor_simple(P, X).
 %    cbor(float(x8, X)) :- size_value_float(x8, _, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
+cbor(unsigned(P, X)) :- place_value(P, X).
+cbor(negative(P, X)) :-
+  #X #< 0,
+  #X + #V #= -1,
+  place_value(P, V).
+cbor(bytes(L, X)) :- cbor_bytes(L, X).
+cbor(text(L, X)) :- cbor_text(L, X).
+cbor(array(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
+cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
+cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
+cbor(simple(P, X)) :- cbor_simple(P, X).
 cbor(float(P, X)) :- cbor_float(P, X).
 
 %% place_value(+P, ?V) is semidet. % doc(place_value/2).
