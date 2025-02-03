@@ -3,6 +3,7 @@
 :- use_module(library(dcgs), [phrase/2]).
 :- use_module(library(iso_ext), [setup_call_cleanup/3]).
 :- use_module(library(lists), [maplist/2]).
+:- use_module(library(pio), [phrase_from_file/2, phrase_to_file/2]).
 :- use_module(library(format), [format/2]).
 
 example_cbor(0, unsigned(_, 10)).
@@ -52,3 +53,18 @@ read_entire_file(Stream, Read) :-
     Read = [C | Read1],
     read_entire_file(Stream, Read1)
   ).
+
+pure_write :- pure_write(0).
+pure_write(Ex) :- default_file(File), pure_write(Ex, File).
+pure_write(Ex, File) :-
+  example_cbor(Ex, Cbor),
+  phrase_to_file(cbor_item(Cbor), File),
+  format("Output written to `~s'~n", [File]),
+  halt(0).
+
+pure_read :- default_file(File), pure_read(File).
+pure_read(File) :-
+  phrase_from_file(cbor_item(Cbor), File),
+  format("Input read from `~s'~n", [File]),
+  format("~w~n", [Cbor]),
+  halt(0).
