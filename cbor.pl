@@ -312,7 +312,7 @@ cbor_minor_value(20, val(i, 20)) --> [].
 cbor_minor_value(21, val(i, 21)) --> [].
 cbor_minor_value(22, val(i, 22)) --> [].
 cbor_minor_value(23, val(i, 23)) --> [].
-% NOTE: {true} makes it work for decoding, possibly a bug on scryer side?
+% NOTE: {true} makes it work for encoding, possibly a bug on scryer side?
 cbor_minor_value(24, val(x1, V)) --> {true}, numbytes_number(1, V).
 cbor_minor_value(25, val(x2, V)) --> {true}, numbytes_number(2, V).
 cbor_minor_value(26, val(x4, V)) --> {true}, numbytes_number(4, V).
