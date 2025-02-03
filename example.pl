@@ -11,7 +11,7 @@ example_cbor(2, bytes(_, [0x00, 0x01, 0x02, 0x03, 0x04])).
 example_cbor(3, text(_, "hello world!\n")).
 example_cbor(4, array(_, [unsigned(_, 2), text(_, "2nd item")])).
 example_cbor(5, map(_, [text(_, "key")-text(_, "value"), unsigned(_, 0)-negative(_, -1)])).
-example_cbor(6, tag(tag(_, 0), unsigned(_, 10))).
+example_cbor(6, tag(_, 0, unsigned(_, 10))).
 example_cbor(7, simple(_, 20)).
 % NOTE: currently floats are represented by their integer representation
 % 0x7e00 is a standard 2-byte NAN
