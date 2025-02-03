@@ -7,7 +7,7 @@
   cbor_item//1
 ]).
 
-:- use_module(library(dcgs), [seq//1]).
+:- use_module(library(dcgs), []).
 :- use_module(library(clpz), [
   (#<)/2, (#=)/2, (in)/2,
   op(700, xfx, #<),
@@ -19,6 +19,7 @@
 :- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(lists), [foldl/4, maplist/2, length/2]).
 :- use_module(library(dif), [dif/2]).
+:- use_module(library(freeze), [freeze/2]).
 
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
@@ -270,7 +271,17 @@ short(X) :- X in 0x00..0xffff.
 word( X) :- X in 0x00..0xffffffff.
 quad( X) :- X in 0x00..0xffffffffffffffff.
 
-byte(X) --> { byte(X) }, [X].
+byte(X) --> [Char], { byte(X), better_char_code(Char, X) }.
+
+better_char_code(Char, Code) :-
+  ( nonvar(Char) -> char_code(Char, Code)
+  ; nonvar(Code) -> char_code(Char, Code)
+  ; freeze(Char, char_code(Char, Code)),
+    freeze(Code, char_code(Char, Code))
+  ).
+
+bytelist([]) --> [].
+bytelist([X | Xs]) --> byte(X), bytelist(Xs).
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
@@ -400,7 +411,7 @@ numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_ \/ #X
 %  This happens, because the result is interpreted as an negative 64bit number.
 
 
-numberbytes_list(N, L) --> { length(L, N) }, seq(L).
+numberbytes_list(N, L) --> { length(L, N) }, bytelist(L).
 numberbytes_text(N, T) --> numberbytes_list(N, L), { chars_utf8bytes(T, L) }.
 numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
 numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).

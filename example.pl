@@ -26,7 +26,7 @@ main_write(Ex, File) :-
   phrase(cbor_item(Cbor), Out),
   setup_call_cleanup(
     open(File, write, Stream),
-    ( maplist(put_code(Stream), Out),
+    ( maplist(put_char(Stream), Out),
       format("Output written to `~s'~n", [File])
     ),
     close(Stream)
@@ -48,7 +48,7 @@ main_read(File) :-
 
 read_entire_file(Stream, Read) :-
   ( at_end_of_stream(Stream) -> Read = []
-  ; get_code(Stream, C),
+  ; get_char(Stream, C),
     Read = [C | Read1],
     read_entire_file(Stream, Read1)
   ).

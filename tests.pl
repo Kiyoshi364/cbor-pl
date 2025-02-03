@@ -9,7 +9,7 @@
 
 :- use_module(library(dcgs), [seq//1, phrase/2, phrase/3]).
 :- use_module(library(lists), [
-  append/3, foldl/4, maplist/3, length/2
+  append/3, foldl/4, maplist/2, maplist/3, length/2
 ]).
 :- use_module(library(iso_ext), [call_cleanup/2]).
 
@@ -17,9 +17,11 @@ clpz:monotonic.
 
 pair_unpair_(K-V, [K, V | L], L).
 
-headerlist_payload_input(H, Payload, In) :-
-  maplist(char_code, H, Header),
-  append(Header, Payload, In).
+code_char(X, Y) :- char_code(Y, X).
+
+headerlist_payload_input(Header, Payload, In) :-
+  maplist(code_char, Payload, Payload1),
+  append(Header, Payload1, In).
 
 nwdet_ok(_:T) :- nwdet(T).
 :- discontiguous(nwdet/1).
@@ -27,7 +29,8 @@ nwdet_ok(_:T) :- nwdet(T).
 test_item_encode_10 :-
   Item = unsigned(_, 10),
   findall(Out, cbor_item(Item, Out, []), Answers),
-  Answers == [
+  maplist(maplist(char_code), Answers, Answers2),
+  Answers2 == [
     [10],
     [24, 10],
     [25, 0, 10],
@@ -46,7 +49,8 @@ true.
 test_item_encode_500 :-
   Item = unsigned(_, 500),
   findall(Out, cbor_item(Item, Out, []), Answers),
-  Answers == [
+  maplist(maplist(char_code), Answers, Answers2),
+  Answers2 == [
     [25, 1, 244],
     [26, 0, 0, 1, 244],
     [27, 0, 0, 0, 0, 0, 0, 1, 244]
@@ -56,7 +60,8 @@ true.
 test_item_encode_negative_10 :-
   Item = negative(_, -10),
   findall(Out, cbor_item(Item, Out, []), Answers),
-  Answers == [
+  maplist(maplist(char_code), Answers, Answers2),
+  Answers2 == [
     [41],
     [56, 9],
     [57, 0, 9],
@@ -75,7 +80,8 @@ true.
 test_item_encode_negative_500 :-
   Item = negative(_, -500),
   findall(Out, cbor_item(Item, Out, []), Answers),
-  Answers == [
+  maplist(maplist(char_code), Answers, Answers2),
+  Answers2 == [
     [57, 1, 243],
     [58, 0, 0, 1, 243],
     [59, 0, 0, 0, 0, 0, 0, 1, 243]
@@ -99,6 +105,7 @@ true.
 
 test_item_decode_5_bytes :-
   Len = 5,
+  Payload = [0x00, 0x01, 0x02, 0x03, 0x04],
   length(Payload, Len),
   headerlist_payload_input("\x45\", Payload, In),
   phrase(cbor_item(X), In),
@@ -109,6 +116,7 @@ true.
 test_item_decode_500_bytes :-
   Len = 500,
   length(Payload, Len),
+  maplist(=(0), Payload),
   headerlist_payload_input("\x59\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
   X == bytes(len(x2, Len), Payload),
@@ -190,7 +198,7 @@ test_item_decode_array :-
   Len = 4,
   length(Items, Len),
   once(foldl(cbor_item, Items, Payload, [])),
-  headerlist_payload_input("\x84\", Payload, In),
+  append("\x84\", Payload, In),
   phrase(cbor_item(X), In),
   X == array(len(i, Len), Items),
   cbor(X),
@@ -202,7 +210,7 @@ test_item_decode_map :-
   Len = 2,
   length(Pairs, Len),
   once(foldl(cbor_item, Items, Payload, [])),
-  headerlist_payload_input("\xa2\", Payload, In),
+  append("\xa2\", Payload, In),
   phrase(cbor_item(X), In),
   X == map(len(i, Len), Pairs),
   cbor(X),
@@ -223,7 +231,7 @@ test_item_decode_tag_small :-
   TagNumber = 10,
   Item = unsigned(x2, 500),
   once(phrase(cbor_item(Item), Payload)),
-  headerlist_payload_input("\xca\", Payload, In),
+  append("\xca\", Payload, In),
   phrase(cbor_item(X), In),
   X == tag(i, TagNumber, Item),
   cbor(X),
@@ -233,7 +241,7 @@ test_item_decode_tag_big :-
   TagNumber = 500,
   Item = unsigned(x2, 500),
   once(phrase(cbor_item(Item), Payload)),
-  headerlist_payload_input("\xd9\\x01\\xf4\", Payload, In),
+  append("\xd9\\x01\\xf4\", Payload, In),
   phrase(cbor_item(X), In),
   X == tag(x2, TagNumber, Item),
   cbor(X),
@@ -376,7 +384,8 @@ true.
 test_rfc8949_1000000_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\x1a\\x00\\x0f\\x42\\x40\", "", In),
-  In = [0x1a, 0x00, 0x0f, 0x42, 0x40],
+  BIn = [0x1a, 0x00, 0x0f, 0x42, 0x40],
+  maplist(code_char, BIn, In),
   Out = unsigned(x4, 1000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -385,7 +394,8 @@ nwdet(test_rfc8949_1000000_encode).
 test_rfc8949_1000000_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\x1a\\x00\\x0f\\x42\\x40\", "", In),
-  In = [0x1a, 0x00, 0x0f, 0x42, 0x40],
+  BIn = [0x1a, 0x00, 0x0f, 0x42, 0x40],
+  maplist(code_char, BIn, In),
   Out = unsigned(x4, 1000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -393,7 +403,8 @@ true.
 test_rfc8949_1000000000000_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\x1b\\x00\\x00\\x00\\xe8\\xd4\\xa5\\x10\\x00\", "", In),
-  In = [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00],
+  BIn = [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00],
+  maplist(code_char, BIn, In),
   Out = unsigned(x8, 1000000000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -402,7 +413,8 @@ nwdet(test_rfc8949_1000000000000_encode).
 test_rfc8949_1000000000000_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\x1b\\x00\\x00\\x00\\xe8\\xd4\\xa5\\x10\\x00\", "", In),
-  In = [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00],
+  BIn = [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00],
+  maplist(code_char, BIn, In),
   Out = unsigned(x8, 1000000000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -423,7 +435,8 @@ true.
 test_rfc8949_18446744073709551616_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc2\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 2,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -436,7 +449,8 @@ nwdet(test_rfc8949_18446744073709551616_encode).
 test_rfc8949_18446744073709551616_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc2\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xc2, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 2,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -461,7 +475,8 @@ true.
 test_rfc8949_negative_18446744073709551617_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc3\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 3,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -474,7 +489,8 @@ nwdet(test_rfc8949_negative_18446744073709551617_encode).
 test_rfc8949_negative_18446744073709551617_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc3\\x49\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xc3, 0x49, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 3,
     bytes(len(i, 9), [
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -538,7 +554,8 @@ true.
 test_rfc8949_float_0d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x00, 0x00],
+  BIn = [0xf9, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -547,7 +564,8 @@ nwdet(test_rfc8949_float_0d0_encode).
 test_rfc8949_float_0d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x00, 0x00],
+  BIn = [0xf9, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -555,7 +573,8 @@ true.
 test_rfc8949_float_negative_0d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x80, 0x00],
+  BIn = [0xf9, 0x80, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x8000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -564,7 +583,8 @@ nwdet(test_rfc8949_float_negative_0d0_encode).
 test_rfc8949_float_negative_0d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x80, 0x00],
+  BIn = [0xf9, 0x80, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x8000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -572,7 +592,8 @@ true.
 test_rfc8949_float_1d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x3c, 0x00],
+  BIn = [0xf9, 0x3c, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x3c00),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -581,7 +602,8 @@ nwdet(test_rfc8949_float_1d0_encode).
 test_rfc8949_float_1d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
-  In = [0xf9, 0x3c, 0x00],
+  BIn = [0xf9, 0x3c, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x3c00),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -602,7 +624,8 @@ true.
 test_rfc8949_float_1d5_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x3e\\x00\", "", In),
-  In = [0xf9, 0x3e, 0x00],
+  BIn = [0xf9, 0x3e, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x3e00),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -611,7 +634,8 @@ nwdet(test_rfc8949_float_1d5_encode).
 test_rfc8949_float_1d5_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x3e\\x00\", "", In),
-  In = [0xf9, 0x3e, 0x00],
+  BIn = [0xf9, 0x3e, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x3e00),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -632,7 +656,8 @@ true.
 test_rfc8949_float_100000d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xfa\\x47\\xc3\\x50\\x00\", "", In),
-  In = [0xfa, 0x47, 0xc3, 0x50, 0x00],
+  BIn = [0xfa, 0x47, 0xc3, 0x50, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x47c35000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -641,7 +666,8 @@ nwdet(test_rfc8949_float_100000d0_encode).
 test_rfc8949_float_100000d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xfa\\x47\\xc3\\x50\\x00\", "", In),
-  In = [0xfa, 0x47, 0xc3, 0x50, 0x00],
+  BIn = [0xfa, 0x47, 0xc3, 0x50, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x47c35000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -662,7 +688,8 @@ true.
 test_rfc8949_float_1d0ep300_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xfb\\x7e\\x37\\xe4\\x3c\\x88\\x00\\x75\\x9c\", "", In),
-  In = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
+  BIn = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7e37e43c8800759c),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -671,7 +698,8 @@ nwdet(test_rfc8949_float_1d0ep300_encode).
 test_rfc8949_float_1d0ep300_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xfb\\x7e\\x37\\xe4\\x3c\\x88\\x00\\x75\\x9c\", "", In),
-  In = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
+  BIn = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7e37e43c8800759c),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -679,7 +707,8 @@ true.
 test_rfc8949_float_5d960464477539063em8_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
-  In = [0xf9, 0x00, 0x01],
+  BIn = [0xf9, 0x00, 0x01],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x0001),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -688,7 +717,8 @@ nwdet(test_rfc8949_float_5d960464477539063em8_encode).
 test_rfc8949_float_5d960464477539063em8_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
-  In = [0xf9, 0x00, 0x01],
+  BIn = [0xf9, 0x00, 0x01],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x0001),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -696,7 +726,8 @@ true.
 test_rfc8949_float_0d00006103515625_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x04\\x00\", "", In),
-  In = [0xf9, 0x04, 0x00],
+  BIn = [0xf9, 0x04, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x0400),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -705,7 +736,8 @@ nwdet(test_rfc8949_float_0d00006103515625_encode).
 test_rfc8949_float_0d00006103515625_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\x04\\x00\", "", In),
-  In = [0xf9, 0x04, 0x00],
+  BIn = [0xf9, 0x04, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x0400),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -713,7 +745,8 @@ true.
 test_rfc8949_float_negative_4d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\xc4\\x00\", "", In),
-  In = [0xf9, 0xc4, 0x00],
+  BIn = [0xf9, 0xc4, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0xc400),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -722,7 +755,8 @@ nwdet(test_rfc8949_float_negative_4d0_encode).
 test_rfc8949_float_negative_4d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xf9\\xc4\\x00\", "", In),
-  In = [0xf9, 0xc4, 0x00],
+  BIn = [0xf9, 0xc4, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0xc400),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -743,7 +777,8 @@ true.
 test_rfc8949_float_infinity_x2_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\x7c\\x00\", "", In),
-  In = [0xf9, 0x7c, 0x00],
+  BIn = [0xf9, 0x7c, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x7c00),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -752,7 +787,8 @@ nwdet(test_rfc8949_float_infinity_x2_encode).
 test_rfc8949_float_infinity_x2_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\x7c\\x00\", "", In),
-  In = [0xf9, 0x7c, 0x00],
+  BIn = [0xf9, 0x7c, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x7c00),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -760,7 +796,8 @@ true.
 test_rfc8949_float_nan_x2_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\x7e\\x00\", "", In),
-  In = [0xf9, 0x7e, 0x00],
+  BIn = [0xf9, 0x7e, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x7e00),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -769,7 +806,8 @@ nwdet(test_rfc8949_float_nan_x2_encode).
 test_rfc8949_float_nan_x2_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\x7e\\x00\", "", In),
-  In = [0xf9, 0x7e, 0x00],
+  BIn = [0xf9, 0x7e, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0x7e00),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -777,7 +815,8 @@ true.
 test_rfc8949_float_negative_infinity_x2_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\xfc\\x00\", "", In),
-  In = [0xf9, 0xfc, 0x00],
+  BIn = [0xf9, 0xfc, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0xfc00),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -786,7 +825,8 @@ nwdet(test_rfc8949_float_negative_infinity_x2_encode).
 test_rfc8949_float_negative_infinity_x2_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xf9\\xfc\\x00\", "", In),
-  In = [0xf9, 0xfc, 0x00],
+  BIn = [0xf9, 0xfc, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x2, 0xfc00),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -794,7 +834,8 @@ true.
 test_rfc8949_float_infinity_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
-  In = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x7c800000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -803,7 +844,8 @@ nwdet(test_rfc8949_float_infinity_x4_encode).
 test_rfc8949_float_infinity_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
-  In = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x7c800000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -811,7 +853,8 @@ true.
 test_rfc8949_float_nan_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
-  In = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x7e000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -820,7 +863,8 @@ nwdet(test_rfc8949_float_nan_x4_encode).
 test_rfc8949_float_nan_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
-  In = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0x7e000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -828,7 +872,8 @@ true.
 test_rfc8949_float_negative_infinity_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
-  In = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0xfc800000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -837,7 +882,8 @@ nwdet(test_rfc8949_float_negative_infinity_x4_encode).
 test_rfc8949_float_negative_infinity_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
-  In = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x4, 0xfc800000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -845,7 +891,8 @@ true.
 test_rfc8949_float_infinity_x8_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\x7f\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7ff0000000000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -854,7 +901,8 @@ nwdet(test_rfc8949_float_infinity_x8_encode).
 test_rfc8949_float_infinity_x8_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\x7f\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7ff0000000000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -862,7 +910,8 @@ true.
 test_rfc8949_float_nan_x8_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\x7f\\xf8\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7ff8000000000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -871,7 +920,8 @@ nwdet(test_rfc8949_float_nan_x8_encode).
 test_rfc8949_float_nan_x8_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\x7f\\xf8\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0x7ff8000000000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -879,7 +929,8 @@ true.
 test_rfc8949_float_negative_infinity_x8_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\xff\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0xfff0000000000000),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -888,7 +939,8 @@ nwdet(test_rfc8949_float_negative_infinity_x8_encode).
 test_rfc8949_float_negative_infinity_x8_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfb\\xff\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
-  In = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  BIn = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = float(x8, 0xfff0000000000000),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -1000,7 +1052,8 @@ true.
 test_rfc8949_tag_1_1363896240d5_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
-  In = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
+  BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -1009,7 +1062,8 @@ nwdet(test_rfc8949_tag_1_1363896240d5_encode).
 test_rfc8949_tag_1_1363896240d5_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
-  In = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
+  BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
+  maplist(code_char, BIn, In),
   Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
   meta_test_rfc8949_encode(In, Out),
 true.
