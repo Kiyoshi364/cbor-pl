@@ -25,7 +25,7 @@
 %% cbor(?Item) is nondet.
 %
 %  Is true if `cbor_item(Item)` describes
-%  a well-formed CBOR encoded byte list.
+%  a well-formed CBOR serialized into a list of chars.
 %  In more pratical terms,
 %  if `cbor(Item)` then `phrase(cbor_item(Item), Chars)` is true
 %  and `Chars` is a list of bytes which
@@ -52,9 +52,9 @@
 %      a not well-formed CBOR,
 %      for more information see `doc(cbor_item//1)`.
 %
-%  The representation used in this library for a CBOR item
-%  maps one-to-one to a byte encoding of certain CBOR Value.
-%  A CBOR Value may have multiple byte representations,
+%  The prolog representation used in this library for a CBOR Item
+%  maps one-to-one to a serialized form of a certain CBOR Item.
+%  A CBOR Value may have multiple serialized forms,
 %  for instance the value 1
 %  may be represented in any of the following ways:
 %    * [0x01]
@@ -307,6 +307,148 @@ better_char_code(Char, Code) :-
 bytelist([]) --> [].
 bytelist([X | Xs]) --> byte(X), bytelist(Xs).
 
+%% phrase(cbor_item(+Item), Chars) is semidet. % doc(cbor_item//1).
+%% phrase(cbor_item(?Item), Chars) is semidet.
+%
+%  The predicate `cbor_item//1` is suited for reasoning about CBOR both
+%  in its prolog form `Item` and
+%  serialized (a list of chars) form `Chars`.
+%  Encoding (converting prolog into serialized form) and
+%  decoding (converting serialized form into prolog form)
+%  a CBOR Data Item are examples of
+%  what is possible with this predicate and
+%  also the main expected use case for it.
+%  But it is also possible for checking and completing
+%  relations between prolog and serialized forms
+%  (more on this in #-Encoding-Features).
+%
+%  For more information on the prolog form,
+%  see `doc(cbor/1)`.
+
+%  The predicate `cbor_item//1` is not suited for stream decoding.
+%  It means that
+%  it is not possible to use a prefix of
+%  a serialized CBOR Data Item to
+%  recover a partial information
+%  about the prolog form of the same CBOR Data Item.
+%
+%  The predicate `cbor_item//1` concerns itself with
+%  "syntactic valid" CBOR Data Items and
+%  does not concern itself with semantically valid CBOR Data Items.
+%  The "syntactic valid" CBOR Data Items are
+%  a superset of the well-formed CBOR Data Items.
+%  The extra items have some substructure wrapped
+%  in a nwf functor (short for "not well-formed")
+%  in its prolog form.
+%  These extra items are included to provide a limited form of
+%  partial information retrieval.
+%  (for more on this, see `doc(nwf_cbor/1)`).
+%
+% # Encoding Features
+%
+%  Some CBOR Data Items in prolog form
+%  (namely bytes, text, arrays and maps)
+%  have redundant information in its representation.
+%  The redundant information may not be provided for encoding.
+%  For example, while encoding the item
+%  `bytes(len(i, N), [0x00, 0x01])`
+%  the predicate instantiates `N` to `2`,
+%  thus leading to the same result as encoding
+%  `bytes(len(i, 2), [0x00, 0x01])`.
+%
+%  Some CBOR Data Items have many serialized representations
+%  depending on which place the information resides in.
+%  The predicate `cbor_item//1 supports this.
+%  For example, the item unsigned(P, 1) has many possible values for P:
+%   * `P = i`
+%   * `P = x1`
+%   * `P = x2`
+%   * `P = x4`
+%   * `P = x8`
+%  The predicate `cbor_item//1` prefers smaller serialized sizes,
+%  ie., the first success is the smallest serialized size.
+%  This behavior aligns with
+%  the Preferred Serialization (section 4.1 of RFC8949)
+%  and allows one to use `once/1` to get
+%  the Preferred Serialization.
+%
+%  For example:
+%  ```prolog
+%    ?- Bytes = _, phrase(cbor_item(bytes(L, [0x00, 0x01])), Chars), maplist(char_code, Chars, Bytes).
+%       Bytes = [66,0,1], L = len(i,2), Chars = "B\x0\\x1\"
+%    ;  Bytes = [88,2,0,1], L = len(x1,2), Chars = "X\x2\\x0\\x1\"
+%    ;  Bytes = [89,0,2,0,1], L = len(x2,2), Chars = "Y\x0\\x2\\x0\\x1\"
+%    ;  Bytes = [90,0,0,0,2,0,1], L = len(x4,2), Chars = "Z\x0\\x0\\x0\\x2\\x0\\x1\"
+%    ;  Bytes = [91,0,0,0,0,0,0,0,2,0,1], L = len(x8,2), Chars = "[\x0\\x0\\x0\\x0\\x0\\x0\\x0\\x2\\x0\\x1\"
+%    ;  false.
+%    ?- Bytes = _, once(phrase(cbor_item(bytes(L, [0x00, 0x01])), Chars)), maplist(char_code, Chars, Bytes).
+%       Bytes = [66,0,1], L = len(i,2), Chars = "B\x0\\x1\".
+%  ```
+%
+% # Map Encoding/Decoding Behavior
+%
+%  Maps are translated as is to/from serialized form.
+%  Therefore, there is no sorting of keys,
+%  duplicate-keys check or valitity checks.
+%
+% # Chars instead of Bytes
+%
+%  TODO
+%
+% # Porting Suggestions
+%
+%  This library was written
+%  with [Scryer Prolog](https://scryer.pl) in mind.
+%  Therefore, it may not work well with other implementations.
+%
+% ## `library(clpz)`
+%
+%  If the target implementation does not support
+%  declarative arithmetic,
+%  consider splitting `cbor_item//1` into two predicates:
+%  one for encoding and another for decoding.
+%
+%  If the target implementation has support for
+%  declarative arithmetic,
+%  consider translating the predicate calls.
+%  All the used predicates are listed in
+%  `:- use_module(library(clpz), [ ... ]).`
+%  on the top of the file.
+%
+% ## String representation (chars, bytes, ...)
+%
+%  The only DCG that actually read/write
+%  elements to the serialized form is `byte//1`,
+%  all other DCGs eventually calls `byte//1`.
+%  Consider modifying `byte//1` to adapt it
+%  to the representation best suited
+%  for the target implementation.
+%  Consider using `frezze/2`, `when/2` or
+%  [attributed variables](https://www.metalevel.at/prolog/attributedvariables)
+%  to support some kind of delayed unification.
+%
+%  Some suggestion implementations:
+%
+%  * Using chars
+%    ```prolog
+%    byte(X) --> [Char], { byte(X), better_char_code(Char, X) }.
+%
+%    better_char_code(Char, Code) :-
+%      ( nonvar(Char) -> char_code(Char, Code)
+%      ; nonvar(Code) -> char_code(Char, Code)
+%      ; freeze(Char, char_code(Char, Code)),
+%        freeze(Code, char_code(Char, Code))
+%      ).
+%    ```
+%  * Using bytes
+%    ```prolog
+%    byte(X) --> [X], { byte(X) }.
+%    ```
+%
+cbor_item(X) -->
+  cbor_major_value(Major, Value),
+  cbor_major_value_x(Major, Value, X).
+
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
   Minor in 0x00..0x1f,
@@ -356,10 +498,6 @@ cbor_minor_value(28, reserved(28)) --> [].
 cbor_minor_value(29, reserved(29)) --> [].
 cbor_minor_value(30, reserved(30)) --> [].
 cbor_minor_value(31, indefinite) --> [].
-
-cbor_item(X) -->
-  cbor_major_value(Major, Value),
-  cbor_major_value_x(Major, Value, X).
 
 cbor_major_value_x(0, Value, X) --> cbor_0_value_x(Value, X).
 cbor_major_value_x(1, Value, X) --> cbor_1_value_x(Value, X).
@@ -480,3 +618,8 @@ simple_or_float(x8, V, float(x8, X)) :- size_value_float(x8, V, X).
 %    * `x4` (4 bytes)
 %    * `x8` (8 bytes)
 size_value_float(_, F, F). % TODO
+
+%% nwf_cbor(NWF). % doc(nwf_cbor/1).
+%
+% TODO
+nwf_cbor(_) :- throw(error(existence_error(procedure,nwf_cbor/1),nwf_cbor/1)).
