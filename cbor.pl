@@ -50,7 +50,7 @@
 %      Note that `cbor_item//1` also describes not well-formed CBOR Items,
 %      in order to support reading partial information from
 %      a not well-formed CBOR,
-%      for more information see documentation for `cbor_item//1`.
+%      for more information see `doc(cbor_item//1)`.
 %
 %  The representation used in this library for a CBOR item
 %  maps one-to-one to a byte encoding of certain CBOR Value.
@@ -75,7 +75,7 @@
 %  or some length used to find the value of the item
 %  (for byte string, byte string, array and map).
 %  `P` indicates where `V` lies in the byte encoding.
-%  See documentation for `place_value/2` for more info.
+%  See `doc(place_value/2)` for more info.
 %
 %  Another important functor for the representation
 %  is the length indicator.
@@ -84,6 +84,7 @@
 %  the length is `N` and it resides at place `P`,
 %  also `place_value(P, N)` must be true.
 %  In the second case `*`, the length is indefinite.
+%  See `doc(lengthindicator_length/2)` for more info.
 %
 % # Major 0 -- Unsigned
 %
@@ -119,7 +120,7 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 2 (byte string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  See `definite_bytes/1` documentation.
+%  See `doc(definite_bytes/1)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -138,7 +139,7 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 3 (text string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  See `definite_text/1` documentation.
+%  See `doc(definite_text/1)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -205,7 +206,7 @@
 %    * `x2` means half   precision float (float16) (2 bytes),
 %    * `x4` means single precision float (float32) (4 bytes),
 %    * `x8` means double precision float (float64) (8 bytes),
-%  See documentation for `size_value_float/3` for more info.
+%  See `doc(size_value_float/3)`.
 %
 %  The following definition is similar to:
 %  ```prolog
