@@ -1,6 +1,25 @@
 /**
-  Consider reading documentation for cbor/1 before
-  using the main predicate cbor_item//2.
+  A simple library for quickly lifting one out of raw bytes
+  without losing any possible representation for CBOR Values.
+  Possibly a good foundation for building
+  a higher-level CBOR encoder/decoder.
+
+  Consider reading documentation for `cbor/1` before
+  using the main predicate `cbor_item//1`.
+  This library is tested for [Scryer Prolog](https://scryer.pl)
+  version 8ac663d.
+
+  Possibly useful links:
+  * [RFC8948](https://www.rfc-editor.org/rfc/rfc8949.html)
+  * [CBOR Wikipedia](https://en.wikipedia.org/wiki/CBOR)
+  * [CBOR.io](https://cbor.io/)
+  * [CBOR Visualizer](https://cbor.me/)
+
+  Other Specifications, RFCs, reserved values and stuff:
+  * [Old CBOR Specification (RFC7049)](https://www.rfc-editor.org/info/rfc7049)
+  * [IANA CBOR Simple Values](https://www.iana.org/assignments/cbor-simple-values/cbor-simple-values.xhtml)
+  * [IANA CBOR Tags](https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml)
+  * [CBOR Data Definition Language (RFC8610)](https://www.rfc-editor.org/rfc/rfc8610.html)
 */
 :- module(cbor, [
   cbor/1,
