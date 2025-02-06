@@ -338,10 +338,10 @@ short(X) :- X in 0x00..0xffff.
 word( X) :- X in 0x00..0xffffffff.
 quad( X) :- X in 0x00..0xffffffffffffffff.
 
-byte(char, X) --> [Char], { byte(X), better_char_code(Char, X) }.
+byte(char, X) --> [Char], { byte(X), frozen_char_code(Char, X) }.
 byte(byte, X) --> [X], { byte(X) }.
 
-better_char_code(Char, Code) :-
+frozen_char_code(Char, Code) :-
   ( nonvar(Char) -> char_code(Char, Code)
   ; nonvar(Code) -> char_code(Char, Code)
   ; freeze(Char, char_code(Char, Code)),
