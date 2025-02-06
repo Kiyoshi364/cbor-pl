@@ -4,7 +4,8 @@
 
 :- use_module(cbor, [
   cbor/1,
-  cbor_item//1
+  cbor_item//1,
+  cbor_item//2
 ]).
 
 :- use_module(library(dcgs), [seq//1, phrase/2, phrase/3]).
@@ -262,6 +263,25 @@ test_item_decode_simple_big :-
 true.
 
 % TODO: add tests for floats
+
+test_byte_decode_array :-
+  Items = [unsigned(i, 10), unsigned(x2, 500), negative(i, -10), negative(x2, -500)],
+  Len = 4,
+  length(Items, Len),
+  In = [0x84, 0x0a, 0x19, 0x01, 0xf4, 0x29, 0x39, 0x01, 0xf3],
+  InLen = 9,
+  length(In, InLen),
+  phrase(cbor_item(X, [listOf(byte)]), In),
+  X == array(len(i, Len), Items),
+  cbor(X),
+true.
+
+test_char_decode_simple_big :-
+  headerlist_payload_input("\xf8\\x78\", "", In),
+  phrase(cbor_item(X, [listOf(char)]), In),
+  X == simple(x1, 120),
+  cbor(X),
+true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

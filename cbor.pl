@@ -23,7 +23,8 @@
 */
 :- module(cbor, [
   cbor/1,
-  cbor_item//1
+  cbor_item//1,
+  cbor_item//2
 ]).
 
 :- use_module(library(dcgs), []).
@@ -36,9 +37,10 @@
   op(150, fx, #)
 ]).
 :- use_module(library(charsio), [chars_utf8bytes/2]).
-:- use_module(library(lists), [foldl/4, maplist/2, length/2]).
 :- use_module(library(dif), [dif/2]).
 :- use_module(library(freeze), [freeze/2]).
+:- use_module(library(error), [must_be/2, instantiation_error/1]).
+:- use_module(library(lists), [member/2, foldl/4, maplist/2, length/2]).
 
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
@@ -307,14 +309,15 @@ cbor_float(x2, X) :- size_value_float(x2, _, X).
 cbor_float(x4, X) :- size_value_float(x4, _, X).
 cbor_float(x8, X) :- size_value_float(x8, _, X).
 
-cbor_pair(K-V) --> cbor_item(K), cbor_item(V).
+cbor_pair(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
 
 byte( X) :- X in 0x00..0xff.
 short(X) :- X in 0x00..0xffff.
 word( X) :- X in 0x00..0xffffffff.
 quad( X) :- X in 0x00..0xffffffffffffffff.
 
-byte(X) --> [Char], { byte(X), better_char_code(Char, X) }.
+byte(char, X) --> [Char], { byte(X), better_char_code(Char, X) }.
+byte(byte, X) --> [X], { byte(X) }.
 
 better_char_code(Char, Code) :-
   ( nonvar(Char) -> char_code(Char, Code)
@@ -323,15 +326,15 @@ better_char_code(Char, Code) :-
     freeze(Code, char_code(Char, Code))
   ).
 
-bytelist([]) --> [].
-bytelist([X | Xs]) --> byte(X), bytelist(Xs).
+bytelist([], _) --> [].
+bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 
-%% phrase(cbor_item(+Item), Chars) is semidet. % doc(cbor_item//1).
-%% phrase(cbor_item(?Item), Chars) is semidet.
+%% phrase(cbor_item(+Item), ?Chars) is semidet. % doc(cbor_item//1).
+%% phrase(cbor_item(?Item), +Chars) is semidet.
 %
 %  The predicate `cbor_item//1` is suited for reasoning about CBOR both
 %  in its prolog form `Item` and
-%  serialized (a list of chars) form `Chars`.
+%  serialized (a list of char) form `Chars`.
 %  Encoding (converting prolog into serialized form) and
 %  decoding (converting serialized form into prolog form)
 %  a CBOR Data Item are examples of
@@ -343,7 +346,9 @@ bytelist([X | Xs]) --> byte(X), bytelist(Xs).
 %
 %  For more information on the prolog form,
 %  see `doc(cbor/1)`.
-
+%  There is a sibling predicate `cbor_item//2`
+%  which receives options, see `doc(cbor_item//2)`.
+%
 %  The predicate `cbor_item//1` is not suited for stream decoding.
 %  It means that
 %  it is not possible to use a prefix of
@@ -410,10 +415,6 @@ bytelist([X | Xs]) --> byte(X), bytelist(Xs).
 %  Therefore, there is no sorting of keys,
 %  duplicate-keys check or valitity checks.
 %
-% # Chars instead of Bytes
-%
-%  TODO
-%
 % # Porting Suggestions
 %
 %  This library was written
@@ -434,39 +435,35 @@ bytelist([X | Xs]) --> byte(X), bytelist(Xs).
 %  `:- use_module(library(clpz), [ ... ]).`
 %  on the top of the file.
 %
-% ## String representation (chars, bytes, ...)
+cbor_item(X) --> cbor_item(X, []).
+
+
+%% phrase(cbor_item(+Item, +Options), ?Chars) is semidet. % doc(cbor_item//2).
+%% phrase(cbor_item(?Item, +Options), +Chars) is semidet.
 %
-%  The only DCG that actually read/write
-%  elements to the serialized form is `byte//1`,
-%  all other DCGs eventually calls `byte//1`.
-%  Consider modifying `byte//1` to adapt it
-%  to the representation best suited
-%  for the target implementation.
-%  Consider using `frezze/2`, `when/2` or
-%  [attributed variables](https://www.metalevel.at/prolog/attributedvariables)
-%  to support some kind of delayed unification.
-%
-%  Some suggestion implementations:
-%
-%  * Using chars
-%    ```prolog
-%    byte(X) --> [Char], { byte(X), better_char_code(Char, X) }.
-%
-%    better_char_code(Char, Code) :-
-%      ( nonvar(Char) -> char_code(Char, Code)
-%      ; nonvar(Code) -> char_code(Char, Code)
-%      ; freeze(Char, char_code(Char, Code)),
-%        freeze(Code, char_code(Char, Code))
-%      ).
-%    ```
-%  * Using bytes
-%    ```prolog
-%    byte(X) --> [X], { byte(X) }.
-%    ```
-%
-cbor_item(X) -->
-  cbor_major_value(Major, Value),
-  cbor_major_value_x(Major, Value, X).
+%  TODO
+cbor_item(X, OptList) -->
+  { parse_options(OptList, Options) },
+  cbor_item_(Options, X).
+
+cbor_item_(Options, X) -->
+  cbor_major_value(Major, Value, Options),
+  cbor_major_value_x(Major, Value, X, Options).
+
+parse_options(OptList, Options) :-
+  must_be(list, OptList),
+  Options = options(ListOf),
+  ( member(Opt, OptList), var(Opt) -> instantiation_error(cbor_item//2)
+  ; parse_option(ListOf, listOf(ListOf), char, [char, byte], OptList)
+  ).
+
+parse_option(Option, Selector, Default, Choices, OptList) :-
+  ( member(Selector, OptList) ->
+    once(member(Option, Choices))
+  ; Option = Default
+  ).
+
+option(listOf, ListOf, options(ListOf)).
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
@@ -476,145 +473,145 @@ header_major_minor(Header, Major, Minor) :-
   #Minor #= #Header /\ 0x1f,
 true.
 
-cbor_major_minor(Major, Minor) -->
-  byte(H),
+cbor_major_minor(Major, Minor, Options) -->
+  { option(listOf, ListOf, Options) },
+  byte(ListOf, H),
   { header_major_minor(H, Major, Minor) }.
 
-cbor_major_value(Major, Value) -->
-  cbor_major_minor(Major, Minor),
-  cbor_minor_value(Minor, Value).
+cbor_major_value(Major, Value, Options) -->
+  cbor_major_minor(Major, Minor, Options),
+  cbor_minor_value(Minor, Value, Options).
 
-cbor_minor_value( 0, val(i,  0)) --> [].
-cbor_minor_value( 1, val(i,  1)) --> [].
-cbor_minor_value( 2, val(i,  2)) --> [].
-cbor_minor_value( 3, val(i,  3)) --> [].
-cbor_minor_value( 4, val(i,  4)) --> [].
-cbor_minor_value( 5, val(i,  5)) --> [].
-cbor_minor_value( 6, val(i,  6)) --> [].
-cbor_minor_value( 7, val(i,  7)) --> [].
-cbor_minor_value( 8, val(i,  8)) --> [].
-cbor_minor_value( 9, val(i,  9)) --> [].
-cbor_minor_value(10, val(i, 10)) --> [].
-cbor_minor_value(11, val(i, 11)) --> [].
-cbor_minor_value(12, val(i, 12)) --> [].
-cbor_minor_value(13, val(i, 13)) --> [].
-cbor_minor_value(14, val(i, 14)) --> [].
-cbor_minor_value(15, val(i, 15)) --> [].
-cbor_minor_value(16, val(i, 16)) --> [].
-cbor_minor_value(17, val(i, 17)) --> [].
-cbor_minor_value(18, val(i, 18)) --> [].
-cbor_minor_value(19, val(i, 19)) --> [].
-cbor_minor_value(20, val(i, 20)) --> [].
-cbor_minor_value(21, val(i, 21)) --> [].
-cbor_minor_value(22, val(i, 22)) --> [].
-cbor_minor_value(23, val(i, 23)) --> [].
+cbor_minor_value( 0, val(i,  0), _) --> [].
+cbor_minor_value( 1, val(i,  1), _) --> [].
+cbor_minor_value( 2, val(i,  2), _) --> [].
+cbor_minor_value( 3, val(i,  3), _) --> [].
+cbor_minor_value( 4, val(i,  4), _) --> [].
+cbor_minor_value( 5, val(i,  5), _) --> [].
+cbor_minor_value( 6, val(i,  6), _) --> [].
+cbor_minor_value( 7, val(i,  7), _) --> [].
+cbor_minor_value( 8, val(i,  8), _) --> [].
+cbor_minor_value( 9, val(i,  9), _) --> [].
+cbor_minor_value(10, val(i, 10), _) --> [].
+cbor_minor_value(11, val(i, 11), _) --> [].
+cbor_minor_value(12, val(i, 12), _) --> [].
+cbor_minor_value(13, val(i, 13), _) --> [].
+cbor_minor_value(14, val(i, 14), _) --> [].
+cbor_minor_value(15, val(i, 15), _) --> [].
+cbor_minor_value(16, val(i, 16), _) --> [].
+cbor_minor_value(17, val(i, 17), _) --> [].
+cbor_minor_value(18, val(i, 18), _) --> [].
+cbor_minor_value(19, val(i, 19), _) --> [].
+cbor_minor_value(20, val(i, 20), _) --> [].
+cbor_minor_value(21, val(i, 21), _) --> [].
+cbor_minor_value(22, val(i, 22), _) --> [].
+cbor_minor_value(23, val(i, 23), _) --> [].
 % NOTE: {true} makes it work for encoding, possibly a bug on scryer side?
-cbor_minor_value(24, val(x1, V)) --> {true}, numbytes_number(1, V).
-cbor_minor_value(25, val(x2, V)) --> {true}, numbytes_number(2, V).
-cbor_minor_value(26, val(x4, V)) --> {true}, numbytes_number(4, V).
-cbor_minor_value(27, val(x8, V)) --> {true}, numbytes_number(8, V).
-cbor_minor_value(28, reserved(28)) --> [].
-cbor_minor_value(29, reserved(29)) --> [].
-cbor_minor_value(30, reserved(30)) --> [].
-cbor_minor_value(31, indefinite) --> [].
+cbor_minor_value(24, val(x1, V), Options) --> {true}, numbytes_number(1, V, Options).
+cbor_minor_value(25, val(x2, V), Options) --> {true}, numbytes_number(2, V, Options).
+cbor_minor_value(26, val(x4, V), Options) --> {true}, numbytes_number(4, V, Options).
+cbor_minor_value(27, val(x8, V), Options) --> {true}, numbytes_number(8, V, Options).
+cbor_minor_value(28, reserved(28), _) --> [].
+cbor_minor_value(29, reserved(29), _) --> [].
+cbor_minor_value(30, reserved(30), _) --> [].
+cbor_minor_value(31, indefinite, _) --> [].
 
-cbor_major_value_x(0, Value, X) --> cbor_0_value_x(Value, X).
-cbor_major_value_x(1, Value, X) --> cbor_1_value_x(Value, X).
-cbor_major_value_x(2, Value, X) --> cbor_2_value_x(Value, X).
-cbor_major_value_x(3, Value, X) --> cbor_3_value_x(Value, X).
-cbor_major_value_x(4, Value, X) --> cbor_4_value_x(Value, X).
-cbor_major_value_x(5, Value, X) --> cbor_5_value_x(Value, X).
-cbor_major_value_x(6, Value, X) --> cbor_6_value_x(Value, X).
-cbor_major_value_x(7, Value, X) --> cbor_7_value_x(Value, X).
+cbor_major_value_x(0, Value, X, Options) --> cbor_0_value_x(Value, X, Options).
+cbor_major_value_x(1, Value, X, Options) --> cbor_1_value_x(Value, X, Options).
+cbor_major_value_x(2, Value, X, Options) --> cbor_2_value_x(Value, X, Options).
+cbor_major_value_x(3, Value, X, Options) --> cbor_3_value_x(Value, X, Options).
+cbor_major_value_x(4, Value, X, Options) --> cbor_4_value_x(Value, X, Options).
+cbor_major_value_x(5, Value, X, Options) --> cbor_5_value_x(Value, X, Options).
+cbor_major_value_x(6, Value, X, Options) --> cbor_6_value_x(Value, X, Options).
+cbor_major_value_x(7, Value, X, Options) --> cbor_7_value_x(Value, X, Options).
 
-cbor_0_value_x(val(P, V), unsigned(P, V)) --> [].
+cbor_0_value_x(val(P, V), unsigned(P, V), _) --> [].
 % Not well-formed: 0x00 + 28 = 28
-cbor_0_value_x(reserved(28), nwf(28)) --> [].
-cbor_0_value_x(reserved(29), nwf(29)) --> [].
-cbor_0_value_x(reserved(30), nwf(30)) --> [].
-cbor_0_value_x(indefinite, nwf(31)) --> [].
+cbor_0_value_x(reserved(28), nwf(28), _) --> [].
+cbor_0_value_x(reserved(29), nwf(29), _) --> [].
+cbor_0_value_x(reserved(30), nwf(30), _) --> [].
+cbor_0_value_x(indefinite, nwf(31), _) --> [].
 
-cbor_1_value_x(val(P, V), negative(P, X)) --> { #X #< 0, #X + #V #= -1 }.
+cbor_1_value_x(val(P, V), negative(P, X), _) --> { #X #< 0, #X + #V #= -1 }.
 % Not well-formed: 0x20 + 28 = 60
-cbor_1_value_x(reserved(28), nwf(60)) --> [].
-cbor_1_value_x(reserved(29), nwf(61)) --> [].
-cbor_1_value_x(reserved(30), nwf(62)) --> [].
-cbor_1_value_x(indefinite, nwf(63)) --> [].
+cbor_1_value_x(reserved(28), nwf(60), _) --> [].
+cbor_1_value_x(reserved(29), nwf(61), _) --> [].
+cbor_1_value_x(reserved(30), nwf(62), _) --> [].
+cbor_1_value_x(indefinite, nwf(63), _) --> [].
 
-cbor_2_value_x(val(P, V), bytes(len(P, V), X)) --> numberbytes_list(V, X).
+cbor_2_value_x(val(P, V), bytes(len(P, V), X), Options) --> numberbytes_list(V, X, Options).
 % Not well-formed: 0x40 + 28 = 92
-cbor_2_value_x(reserved(28), nwf(92)) --> [].
-cbor_2_value_x(reserved(29), nwf(93)) --> [].
-cbor_2_value_x(reserved(30), nwf(94)) --> [].
-cbor_2_value_x(indefinite, bytes(*, X)) --> indefinite_bytes(X).
+cbor_2_value_x(reserved(28), nwf(92), _) --> [].
+cbor_2_value_x(reserved(29), nwf(93), _) --> [].
+cbor_2_value_x(reserved(30), nwf(94), _) --> [].
+cbor_2_value_x(indefinite, bytes(*, X), Options) --> indefinite_bytes(X, Options).
 
-cbor_3_value_x(val(P, V), text(len(P, V), X)) --> numberbytes_text(V, X).
+cbor_3_value_x(val(P, V), text(len(P, V), X), Options) --> numberbytes_text(V, X, Options).
 % Not well-formed: 0x60 + 28 = 124
-cbor_3_value_x(reserved(28), nwf(124)) --> [].
-cbor_3_value_x(reserved(29), nwf(125)) --> [].
-cbor_3_value_x(reserved(30), nwf(126)) --> [].
-cbor_3_value_x(indefinite, text(*, X)) --> indefinite_text(X).
+cbor_3_value_x(reserved(28), nwf(124), _) --> [].
+cbor_3_value_x(reserved(29), nwf(125), _) --> [].
+cbor_3_value_x(reserved(30), nwf(126), _) --> [].
+cbor_3_value_x(indefinite, text(*, X), Options) --> indefinite_text(X, Options).
 
-cbor_4_value_x(val(P, V), array(len(P, V), X)) --> numberbytes_array(V, X).
+cbor_4_value_x(val(P, V), array(len(P, V), X), Options) --> numberbytes_array(V, X, Options).
 % Not well-formed: 0x80 + 28 = 156
-cbor_4_value_x(reserved(28), nwf(156)) --> [].
-cbor_4_value_x(reserved(29), nwf(157)) --> [].
-cbor_4_value_x(reserved(30), nwf(158)) --> [].
-cbor_4_value_x(indefinite, array(*, X)) --> indefinite_array(X).
+cbor_4_value_x(reserved(28), nwf(156), _) --> [].
+cbor_4_value_x(reserved(29), nwf(157), _) --> [].
+cbor_4_value_x(reserved(30), nwf(158), _) --> [].
+cbor_4_value_x(indefinite, array(*, X), Options) --> indefinite_array(X, Options).
 
-cbor_5_value_x(val(P, V), map(len(P, V), X)) --> numberbytes_map(V, X).
+cbor_5_value_x(val(P, V), map(len(P, V), X), Options) --> numberbytes_map(V, X, Options).
 % Not well-formed: 0xa0 + 28 = 188
-cbor_5_value_x(reserved(28), nwf(188)) --> [].
-cbor_5_value_x(reserved(29), nwf(189)) --> [].
-cbor_5_value_x(reserved(30), nwf(190)) --> [].
-cbor_5_value_x(indefinite, map(*, X)) --> indefinite_map(X).
+cbor_5_value_x(reserved(28), nwf(188), _) --> [].
+cbor_5_value_x(reserved(29), nwf(189), _) --> [].
+cbor_5_value_x(reserved(30), nwf(190), _) --> [].
+cbor_5_value_x(indefinite, map(*, X), Options) --> indefinite_map(X, Options).
 
-cbor_6_value_x(val(P, V), tag(P, V, X)) --> cbor_item(X).
+cbor_6_value_x(val(P, V), tag(P, V, X), Options) --> cbor_item_(Options, X).
 % Not well-formed: 0xc0 + 28 = 220
-cbor_6_value_x(reserved(28), nwf(220)) --> [].
-cbor_6_value_x(reserved(29), nwf(221)) --> [].
-cbor_6_value_x(reserved(30), nwf(222)) --> [].
-cbor_6_value_x(indefinite,   nwf(223)) --> [].
+cbor_6_value_x(reserved(28), nwf(220), _) --> [].
+cbor_6_value_x(reserved(29), nwf(221), _) --> [].
+cbor_6_value_x(reserved(30), nwf(222), _) --> [].
+cbor_6_value_x(indefinite,   nwf(223), _) --> [].
 
-cbor_7_value_x(val(P, V), X) --> { simple_or_float(P, V, X) }.
+cbor_7_value_x(val(P, V), X, _) --> { simple_or_float(P, V, X) }.
 % Not well-formed: 0xe0 + 28 = 252
-cbor_7_value_x(reserved(28), nwf(252)) --> [].
-cbor_7_value_x(reserved(29), nwf(253)) --> [].
-cbor_7_value_x(reserved(30), nwf(254)) --> [].
-cbor_7_value_x(indefinite,   break) --> [].
+cbor_7_value_x(reserved(28), nwf(252), _) --> [].
+cbor_7_value_x(reserved(29), nwf(253), _) --> [].
+cbor_7_value_x(reserved(30), nwf(254), _) --> [].
+cbor_7_value_x(indefinite,   break, _) --> [].
 
-numbytes_number(1, X) --> byte(X).
-numbytes_number(2, X) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
-numbytes_number(4, X) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
-numbytes_number(8, X) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1), numbytes_number(N, X0).
+numbytes_number(1, X, Opts) --> { option(listOf, ListOf, Opts) }, byte(ListOf, X).
+numbytes_number(2, X, Opts) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
+numbytes_number(4, X, Opts) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
+numbytes_number(8, X, Opts) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
 % NOTE: `X * (2 ^ (8 * 4))` and `X << (8 * 4)` have the same result,
 %  unless if `X in 0x80000000..0xffffffff`.
 %  This happens, because the result is interpreted as an negative 64bit number.
 
+numberbytes_list(N, L, Options) --> { option(listOf, ListOf, Options), length(L, N) }, bytelist(L, ListOf).
+numberbytes_text(N, T, Options) --> numberbytes_list(N, L, Options), { chars_utf8bytes(T, L) }.
+numberbytes_array(N, A, Options) --> { length(A, N) }, foldl(cbor_item_(Options), A).
+numberbytes_map(N, M, Options) --> { length(M, N) }, foldl(cbor_pair(Options), M).
 
-numberbytes_list(N, L) --> { length(L, N) }, bytelist(L).
-numberbytes_text(N, T) --> numberbytes_list(N, L), { chars_utf8bytes(T, L) }.
-numberbytes_array(N, A) --> { length(A, N) }, foldl(cbor_item, A).
-numberbytes_map(N, M) --> { length(M, N) }, foldl(cbor_pair, M).
-
-indefinite_bytes(X) --> indefinite_help_(X, bytes_uni, indefinite_bytes).
+indefinite_bytes(X, Options) --> indefinite_help_(X, bytes_uni, indefinite_bytes, Options).
 bytes_uni(bytes(L, V), bytes(L, V)) :- L = len(_, _).
 bytes_uni(nwf(A), A).
 
-indefinite_text(X) --> indefinite_help_(X, text_uni, indefinite_text).
+indefinite_text(X, Options) --> indefinite_help_(X, text_uni, indefinite_text, Options).
 text_uni(text(L, V), text(L, V)) :- L = len(_, _).
 text_uni(nwf(A), A).
 
-indefinite_array(X) --> indefinite_help_(X, =, indefinite_array).
+indefinite_array(X, Options) --> indefinite_help_(X, =, indefinite_array, Options).
 
-indefinite_map(X) --> indefinite_help_(X, map_uni(Val), indefinite_map_(Val)).
-indefinite_map_(Val, X) --> cbor_item(Val), indefinite_map(X).
+indefinite_map(X, Options) --> indefinite_help_(X, map_uni(Val), indefinite_map_(Val), Options).
+indefinite_map_(Val, X, Options) --> cbor_item_(Options, Val), indefinite_map(X, Options).
 map_uni(Val, Key-Val, Key).
 
-:- meta_predicate(indefinite_help_(?, 2, 3, ?, ?)).
+:- meta_predicate(indefinite_help_(?, 2, 4, ?, ?, ?)).
 
-indefinite_help_([], _, _) --> cbor_item(break).
-indefinite_help_([V | X], Out_In, DCG) --> { call(cbor:Out_In, V, Item), dif(Item, break) }, cbor_item(Item), call(cbor:DCG, X).
+indefinite_help_([], _, _, Options) --> cbor_item_(Options, break).
+indefinite_help_([V | X], Out_In, DCG, Options) --> { call(cbor:Out_In, V, Item), dif(Item, break) }, cbor_item_(Options, Item), call(cbor:DCG, X, Options).
 
 simple_or_float(i, V, simple(i, V)) :- V in 0..23.
 simple_or_float(x1, V, S) :-
