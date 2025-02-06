@@ -56,7 +56,7 @@
 :- use_module(library(charsio), [chars_utf8bytes/2]).
 :- use_module(library(dif), [dif/2]).
 :- use_module(library(freeze), [freeze/2]).
-:- use_module(library(error), [must_be/2, instantiation_error/1]).
+:- use_module(library(error), [must_be/2, instantiation_error/1, domain_error/3]).
 :- use_module(library(lists), [member/2, foldl/4, maplist/2, length/2]).
 
 %% cbor(+Item) is semidet. % doc(cbor/1).
@@ -487,7 +487,9 @@ parse_options(OptList, Options) :-
 
 parse_option(Selector, OptList) :-
   ( member(Selector, OptList) ->
-    call(Selector)
+    ( call(Selector) -> true
+    ; domain_error(invalid_option, Selector, OptList)
+    )
   ; default_option(Selector)
   ).
 
@@ -515,7 +517,7 @@ parse_option(Selector, OptList) :-
 option(listOf, ListOf, options(ListOf)).
 
 %% default_option(+Option) is semidet. % doc(default_option/1).
-%% default_option(?Option) is nondet. % doc(default_option/1).
+%% default_option(?Option) is nondet.
 %
 %  Is true if `Option` is a default option for `cbor_item//2`.
 default_option(listOf(char)).
