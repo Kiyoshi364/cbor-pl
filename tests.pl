@@ -303,6 +303,23 @@ test_custom_bytes_text :-
   cbor(X),
 true.
 
+test_convert_float_sif_1d0_decode :-
+  % In = "\xf9\\x3c\\x00\",
+  NULL = '\x00\',
+  In = ['\xf9\', '\x3c\', NULL],
+  phrase(cbor_item(X, [float_convertion(size_int_float)]), In),
+  X == float(x2, 0x3c00),
+  cbor(X),
+true.
+
+test_convert_float_sii_1d0_decode :-
+  NULL = '\x00\',
+  In = ['\xf9\', '\x3c\', NULL],
+  phrase(cbor_item(X, [float_convertion(size_int_int)]), In),
+  X == float(x2, 0x3c00),
+  cbor(X),
+true.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 meta_test_rfc8949_encode(In, Out) :-
@@ -612,7 +629,7 @@ true.
 
 test_rfc8949_float_negative_0d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
+  % headerlist_payload_input("\xf9\\x80\\x00\", "", In),
   BIn = [0xf9, 0x80, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x2, 0x8000),
@@ -622,7 +639,7 @@ true.
 nwdet(test_rfc8949_float_negative_0d0_encode).
 test_rfc8949_float_negative_0d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
+  % headerlist_payload_input("\xf9\\x80\\x00\", "", In),
   BIn = [0xf9, 0x80, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x2, 0x8000),
@@ -631,7 +648,7 @@ true.
 
 test_rfc8949_float_1d0_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
+  % headerlist_payload_input("\xf9\\x3c\\x00\", "", In),
   BIn = [0xf9, 0x3c, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x2, 0x3c00),
@@ -641,7 +658,7 @@ true.
 nwdet(test_rfc8949_float_1d0_encode).
 test_rfc8949_float_1d0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
+  % headerlist_payload_input("\xf9\\x3c\\x00\", "", In),
   BIn = [0xf9, 0x3c, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x2, 0x3c00),

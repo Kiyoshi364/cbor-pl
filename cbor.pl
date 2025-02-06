@@ -244,13 +244,13 @@
 %    * `x2` means half   precision float (float16) (2 bytes),
 %    * `x4` means single precision float (float32) (4 bytes),
 %    * `x8` means double precision float (float64) (8 bytes),
-%  See `doc(size_value_float/3)`.
+%  See `doc(size_int_float/3)`.
 %
 %  The following definition is similar to:
 %  ```prolog
-%    cbor(float(x2, X)) :- size_value_float(x2, _, X).
-%    cbor(float(x4, X)) :- size_value_float(x4, _, X).
-%    cbor(float(x8, X)) :- size_value_float(x8, _, X).
+%    cbor(float(x2, X)) :- size_int_float(x2, _, X).
+%    cbor(float(x4, X)) :- size_int_float(x4, _, X).
+%    cbor(float(x8, X)) :- size_int_float(x8, _, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
 cbor(unsigned(P, X)) :- cbor_unsigned(P, X).
@@ -327,9 +327,9 @@ cbor_tag(P, T, X) :- place_value(P, T), cbor(X).
 cbor_simple(i , X) :- place_value(i , X).
 cbor_simple(x1, X) :- place_value(x1, X).
 
-cbor_float(x2, X) :- size_value_float(x2, _, X).
-cbor_float(x4, X) :- size_value_float(x4, _, X).
-cbor_float(x8, X) :- size_value_float(x8, _, X).
+cbor_float(x2, X) :- size_int_float(x2, _, X).
+cbor_float(x4, X) :- size_int_float(x4, _, X).
+cbor_float(x8, X) :- size_int_float(x8, _, X).
 
 cbor_pair_(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
 
@@ -480,10 +480,11 @@ cbor_item_(Options, X) -->
 
 parse_options(OptList, Options) :-
   must_be(list, OptList),
-  Options = options(ListOf, BT_2),
+  Options = options(ListOf, BT_2, SIF_3),
   ( member(Opt, OptList), var(Opt) -> instantiation_error(cbor_item//2)
   ; parse_option(listOf(ListOf), OptList),
-    parse_option(bytes_text(BT_2), OptList)
+    parse_option(bytes_text(BT_2), OptList),
+    parse_option(float_conversion(SIF_3), OptList)
   ).
 
 parse_option(Selector, OptList) :-
@@ -520,13 +521,33 @@ parse_option(Selector, OptList) :-
 %    relates a list of bytes encoding a UTF-8 string `Bytes`
 %    to a string `Text`.
 %    The predicate is used as `call(BT_2, Bytes, Text)`.
-%    The default value is `utf8bytes_chars/2`
+%    The default value is `utf8bytes_chars`
 %    which just calls `chars_utf8bytes/2` from `library(charsio)`.
 %
-%    Consider making `BT_2 = Module:Predicate_2` true.
+%    When using a custom predicate,
+%    consider making `BT_2 = Module:Predicate_2` true.
 %
-option(listOf    , ListOf, options( ListOf, _BT_2)).
-option(bytes_text, BT_2  , options(_ListOf,  BT_2)).
+%  * `float_convertion(SIF_3)`
+%    `SIF_3` is a predicate that
+%    relates a `Size` (one of `x2`, `x4`, `x8`),
+%    an `Integer` of size `Size` and
+%    the `Float` represented by the `Integer`.
+%    The predicate is used as `call(SIF_3, Size, Integer, Float)`.
+%    See `doce(size_integer_float/3)` for more information.
+%
+%    The default value is `size_int_float`.
+%    At the moment it is NOT IMPLEMENTED,
+%    it behaves the same as `size_int_int`.
+%
+%    `size_int_int` checks
+%    if `Size` is valid and unifies `Integer` with `Float`.
+%
+%    When using a custom predicate,
+%    consider making `SIF_3 = Module:Predicate_3` true.
+%
+option(listOf          , ListOf, options( ListOf, _BT_2, _SIF_3)).
+option(bytes_text      , BT_2  , options(_ListOf,  BT_2, _SIF_3)).
+option(float_convertion, SIF_3 , options(_ListOf, _BT_2,  SIF_3)).
 
 %% default_option(+Option) is semidet. % doc(default_option/1).
 %% default_option(?Option) is nondet.
@@ -534,12 +555,19 @@ option(bytes_text, BT_2  , options(_ListOf,  BT_2)).
 %  Is true if `Option` is a default option for `cbor_item//2`.
 default_option(listOf(char)).
 default_option(bytes_text(utf8bytes_chars)).
+default_option(float_conversion(size_int_float)).
 
 listOf(char).
 listOf(byte).
 
 utf8bytes_chars(Bytes, Text) :- chars_utf8bytes(Text, Bytes).
+
+% bytes_text(utf8bytes_chars).
 bytes_text(BT_2) :- callable(BT_2).
+
+% float_conversion(size_int_float).
+% float_conversion(size_int_int).
+float_conversion(SIF_3) :- callable(SIF_3).
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
@@ -650,7 +678,7 @@ cbor_6_value_x(reserved(29), nwf(221), _) --> [].
 cbor_6_value_x(reserved(30), nwf(222), _) --> [].
 cbor_6_value_x(indefinite,   nwf(223), _) --> [].
 
-cbor_7_value_x(val(P, V), X, _) --> { simple_or_float(P, V, X) }.
+cbor_7_value_x(val(P, V), X, Options) --> { simple_or_float(P, V, X, Options) }.
 % Not well-formed: 0xe0 + 28 = 252
 cbor_7_value_x(reserved(28), nwf(252), _) --> [].
 cbor_7_value_x(reserved(29), nwf(253), _) --> [].
@@ -689,16 +717,16 @@ map_uni(Val, Key-Val, Key).
 indefinite_help_([], _, _, Options) --> cbor_item_(Options, break).
 indefinite_help_([V | X], Out_In, DCG, Options) --> { call(cbor:Out_In, V, Item), dif(Item, break) }, cbor_item_(Options, Item), call(cbor:DCG, X, Options).
 
-simple_or_float(i, V, simple(i, V)) :- V in 0..23.
-simple_or_float(x1, V, S) :-
+simple_or_float(i, V, simple(i, V), _) :- V in 0..23.
+simple_or_float(x1, V, S, _) :-
   ( V in 0x00..0x1f, S = nwf(simple(x1, V))
   ; V in 0x20..0xff, S = simple(x1, V)
   ).
-simple_or_float(x2, V, float(x2, X)) :- size_value_float(x2, V, X).
-simple_or_float(x4, V, float(x4, X)) :- size_value_float(x4, V, X).
-simple_or_float(x8, V, float(x8, X)) :- size_value_float(x8, V, X).
+simple_or_float(x2, V, float(x2, X), Options) :- option(float_convertion, SIF_3, Options), call(SIF_3, x2, V, X).
+simple_or_float(x4, V, float(x4, X), Options) :- option(float_convertion, SIF_3, Options), call(SIF_3, x4, V, X).
+simple_or_float(x8, V, float(x8, X), Options) :- option(float_convertion, SIF_3, Options), call(SIF_3, x8, V, X).
 
-%% size_value_float(S, I, F). % doc(size_value_float/3).
+%% size_int_float(S, I, F). % doc(size_int_float/3).
 %
 %  WARNING: it is NOT IMPLEMENTED
 %    it currently unifies `I` and `F`.
@@ -709,7 +737,11 @@ simple_or_float(x8, V, float(x8, X)) :- size_value_float(x8, V, X).
 %    * `x2` (2 bytes)
 %    * `x4` (4 bytes)
 %    * `x8` (8 bytes)
-size_value_float(_, F, F). % TODO
+size_int_float(S, I, F) :- size_int_int(S, I, F). % TODO
+
+size_int_int(x2, I, I).
+size_int_int(x4, I, I).
+size_int_int(x8, I, I).
 
 %% nwf_cbor(NWF). % doc(nwf_cbor/1).
 %
