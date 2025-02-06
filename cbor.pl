@@ -461,7 +461,6 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %
 cbor_item(X) --> cbor_item(X, []).
 
-
 %% phrase(cbor_item(+Item, +Options), ?Chars) is semidet. % doc(cbor_item//2).
 %% phrase(cbor_item(?Item, +Options), +Chars) is semidet.
 %
