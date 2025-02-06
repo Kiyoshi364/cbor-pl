@@ -480,9 +480,10 @@ cbor_item_(Options, X) -->
 
 parse_options(OptList, Options) :-
   must_be(list, OptList),
-  Options = options(ListOf),
+  Options = options(ListOf, BT_2),
   ( member(Opt, OptList), var(Opt) -> instantiation_error(cbor_item//2)
-  ; parse_option(listOf(ListOf), OptList)
+  ; parse_option(listOf(ListOf), OptList),
+    parse_option(bytes_text(BT_2), OptList)
   ).
 
 parse_option(Selector, OptList) :-
@@ -514,16 +515,31 @@ parse_option(Selector, OptList) :-
 %    `cbor_item//2` decribes a list of `ListOf`.
 %    Possible values: `char` (default), `byte`.
 %
-option(listOf, ListOf, options(ListOf)).
+%  * `bytes_text(BT_2)`:
+%    `BT_2` is a predicate that
+%    relates a list of bytes encoding a UTF-8 string `Bytes`
+%    to a string `Text`.
+%    The predicate is used as `call(BT_2, Bytes, Text)`.
+%    The default value is `utf8bytes_chars/2`
+%    which just calls `chars_utf8bytes/2` from `library(charsio)`.
+%
+%    Consider making `BT_2 = Module:Predicate_2` true.
+%
+option(listOf    , ListOf, options( ListOf, _BT_2)).
+option(bytes_text, BT_2  , options(_ListOf,  BT_2)).
 
 %% default_option(+Option) is semidet. % doc(default_option/1).
 %% default_option(?Option) is nondet.
 %
 %  Is true if `Option` is a default option for `cbor_item//2`.
 default_option(listOf(char)).
+default_option(bytes_text(utf8bytes_chars)).
 
 listOf(char).
 listOf(byte).
+
+utf8bytes_chars(Bytes, Text) :- chars_utf8bytes(Text, Bytes).
+bytes_text(BT_2) :- callable(BT_2).
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
@@ -650,7 +666,7 @@ numbytes_number(8, X, Opts) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_
 %  This happens, because the result is interpreted as an negative 64bit number.
 
 numberbytes_list(N, L, Options) --> { option(listOf, ListOf, Options), length(L, N) }, bytelist(L, ListOf).
-numberbytes_text(N, T, Options) --> numberbytes_list(N, L, Options), { chars_utf8bytes(T, L) }.
+numberbytes_text(N, T, Options) --> numberbytes_list(N, L, Options), { option(bytes_text, BT_2, Options), call(BT_2, L, T) }.
 numberbytes_array(N, A, Options) --> { length(A, N) }, foldl(cbor_item_(Options), A).
 numberbytes_map(N, M, Options) --> { length(M, N) }, foldl(cbor_pair(Options), M).
 

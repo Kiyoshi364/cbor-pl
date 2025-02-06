@@ -283,6 +283,26 @@ test_char_decode_simple_big :-
   cbor(X),
 true.
 
+same_length([], []).
+same_length([_ | As], [_ | Bs]) :- same_length(As, Bs).
+
+custom_bytes_text(Bytes, Text) :-
+  same_length(Bytes, Text),
+  maplist(char_code, Text, Bytes).
+
+test_custom_bytes_text :-
+  Text = "ascii rules!",
+  Len = 12,
+  length(Text, Len),
+  append("\x6c\", Text, In),
+  Options = [
+    listOf(char), bytes_text(cbor_tests:custom_bytes_text)
+  ],
+  phrase(cbor_item(X, Options), In),
+  X == text(len(i, Len), Text),
+  cbor(X),
+true.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 meta_test_rfc8949_encode(In, Out) :-
