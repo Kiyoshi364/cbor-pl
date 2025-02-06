@@ -50,9 +50,9 @@
 %  Is true if `cbor_item(Item)` describes
 %  a well-formed CBOR serialized into a list of chars.
 %  In more pratical terms,
-%  if `cbor(Item)` then `phrase(cbor_item(Item), Chars)` is true
-%  and `Chars` is a list of bytes which
-%  is a well-formed CBOR and encodes `Item`.
+%  if `cbor(Item)` then `phrase(cbor_item(Item), S)` is true
+%  and `S` is a list of byte-like elements which
+%  is a serialized well-formed CBOR and encodes `Item`.
 %
 %  Each clause maps a functor of a CBOR Item
 %  to one Major Type from CBOR specification.
@@ -331,12 +331,12 @@ better_char_code(Char, Code) :-
 bytelist([], _) --> [].
 bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 
-%% phrase(cbor_item(+Item), ?Chars) is semidet. % doc(cbor_item//1).
-%% phrase(cbor_item(?Item), +Chars) is semidet.
+%% phrase(cbor_item(+Item), ?S) is semidet. % doc(cbor_item//1).
+%% phrase(cbor_item(?Item), +S) is semidet.
 %
 %  The predicate `cbor_item//1` is suited for reasoning about CBOR both
 %  in its prolog form `Item` and
-%  serialized (a list of char) form `Chars`.
+%  serialized (a list of byte-like elements) form `S`.
 %  Encoding (converting prolog into serialized form) and
 %  decoding (converting serialized form into prolog form)
 %  a CBOR Data Item are examples of
