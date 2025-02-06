@@ -25,7 +25,7 @@
   place_value/2,
   lengthindicator_length/2,
 
-  % Public DGCs
+  % Public DCGs
   cbor_item//1,
   cbor_item//2
 ]).
