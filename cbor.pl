@@ -463,13 +463,13 @@ parse_options(OptList, Options) :-
   must_be(list, OptList),
   Options = options(ListOf),
   ( member(Opt, OptList), var(Opt) -> instantiation_error(cbor_item//2)
-  ; parse_option(ListOf, listOf(ListOf), char, [char, byte], OptList)
+  ; parse_option(listOf(ListOf), OptList)
   ).
 
-parse_option(Option, Selector, Default, Choices, OptList) :-
+parse_option(Selector, OptList) :-
   ( member(Selector, OptList) ->
-    once(member(Option, Choices))
-  ; Option = Default
+    call(Selector)
+  ; default_option(Selector)
   ).
 
 %% option(+Key, ?Value, ?Options) is semidet. % doc(option/3).
@@ -494,6 +494,15 @@ parse_option(Option, Selector, Default, Choices, OptList) :-
 %    Possible values: `char` (default), `byte`.
 %
 option(listOf, ListOf, options(ListOf)).
+
+%% default_option(+Option) is semidet. % doc(default_option/1).
+%% default_option(?Option) is nondet. % doc(default_option/1).
+%
+%  Is true if `Option` is a default option for `cbor_item//2`.
+default_option(listOf(char)).
+
+listOf(char).
+listOf(byte).
 
 header_major_minor(Header, Major, Minor) :-
   Major in 0..7,
