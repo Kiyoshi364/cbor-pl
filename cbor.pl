@@ -8,7 +8,14 @@
   using the main predicate `cbor_item//1`.
   This library is tested for [Scryer Prolog](https://scryer.pl)
   version 8ac663d.
+*/
+:- module(cbor, [
+  cbor/1,
+  cbor_item//1,
+  cbor_item//2
+]).
 
+/**
   Possibly useful links:
   * [RFC8948](https://www.rfc-editor.org/rfc/rfc8949.html)
   * [CBOR Wikipedia](https://en.wikipedia.org/wiki/CBOR)
@@ -21,11 +28,6 @@
   * [IANA CBOR Tags](https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml)
   * [CBOR Data Definition Language (RFC8610)](https://www.rfc-editor.org/rfc/rfc8610.html)
 */
-:- module(cbor, [
-  cbor/1,
-  cbor_item//1,
-  cbor_item//2
-]).
 
 :- use_module(library(dcgs), []).
 :- use_module(library(clpz), [
