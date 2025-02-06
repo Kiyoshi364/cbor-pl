@@ -331,7 +331,7 @@ cbor_float(x2, X) :- size_value_float(x2, _, X).
 cbor_float(x4, X) :- size_value_float(x4, _, X).
 cbor_float(x8, X) :- size_value_float(x8, _, X).
 
-cbor_pair(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
+cbor_pair_(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
 
 byte( X) :- X in 0x00..0xff.
 short(X) :- X in 0x00..0xffff.
@@ -668,7 +668,7 @@ numbytes_number(8, X, Opts) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_
 numberbytes_list(N, L, Options) --> { option(listOf, ListOf, Options), length(L, N) }, bytelist(L, ListOf).
 numberbytes_text(N, T, Options) --> numberbytes_list(N, L, Options), { option(bytes_text, BT_2, Options), call(BT_2, L, T) }.
 numberbytes_array(N, A, Options) --> { length(A, N) }, foldl(cbor_item_(Options), A).
-numberbytes_map(N, M, Options) --> { length(M, N) }, foldl(cbor_pair(Options), M).
+numberbytes_map(N, M, Options) --> { length(M, N) }, foldl(cbor_pair_(Options), M).
 
 indefinite_bytes(X, Options) --> indefinite_help_(X, bytes_uni, indefinite_bytes, Options).
 bytes_uni(bytes(L, V), bytes(L, V)) :- L = len(_, _).
