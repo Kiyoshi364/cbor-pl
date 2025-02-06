@@ -349,7 +349,9 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %  For more information on the prolog form,
 %  see `doc(cbor/1)`.
 %  There is a sibling predicate `cbor_item//2`
-%  which receives options, see `doc(cbor_item//2)`.
+%  which receives options.
+%  To know more about these options,
+%  see `doc(option/3)`.
 %
 %  The predicate `cbor_item//1` is not suited for stream decoding.
 %  It means that
@@ -443,7 +445,12 @@ cbor_item(X) --> cbor_item(X, []).
 %% phrase(cbor_item(+Item, +Options), ?Chars) is semidet. % doc(cbor_item//2).
 %% phrase(cbor_item(?Item, +Options), +Chars) is semidet.
 %
-%  TODO
+%  Similar to `cbor_item//1`, but with `Options`.
+%  See `doc(option/3)` for available options.
+%
+%  `Options` is a list.
+%  If repeating options are provided, the first is used.
+%
 cbor_item(X, OptList) -->
   { parse_options(OptList, Options) },
   cbor_item_(Options, X).
@@ -465,6 +472,27 @@ parse_option(Option, Selector, Default, Choices, OptList) :-
   ; Option = Default
   ).
 
+%% option(+Key, ?Value, ?Options) is semidet. % doc(option/3).
+%% option(?Key, ?Value, ?Options) is nondet.
+%
+%  True if `Options` has a `Value` in place of `Key`.
+%  Works similar to `Options.Key` or `Options.Key := Value`
+%  in C-like programming languages.
+%
+%  `Options` are options for `cbor_item//2`.
+%  The default values for an option
+%  can be found at `default_option/1`.
+%
+%  `call(Key, Value)` is true
+%  iff `O =.. [Key, Value]` and
+%  `O` is a valid option for `cbor_item//2`.
+%
+%  Possible options are:
+%
+%  * `listOf(ListOf)`:
+%    `cbor_item//2` decribes a list of `ListOf`.
+%    Possible values: `char` (default), `byte`.
+%
 option(listOf, ListOf, options(ListOf)).
 
 header_major_minor(Header, Major, Minor) :-
