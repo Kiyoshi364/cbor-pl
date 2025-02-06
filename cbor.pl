@@ -10,7 +10,22 @@
   version 8ac663d.
 */
 :- module(cbor, [
+  % Documentation predicates
   cbor/1,
+  cbor_bytes/2,
+  definite_bytes/1,
+  cbor_text/2,
+  definite_text/1,
+  cbor_array/2,
+  cbor_map/2,
+  pair_of_cbor/1,
+  cbor_tag/3,
+  cbor_simple/2,
+  cbor_float/2,
+  place_value/2,
+  lengthindicator_length/2,
+
+  % Public DGCs
   cbor_item//1,
   cbor_item//2
 ]).
@@ -238,16 +253,13 @@
 %    cbor(float(x8, X)) :- size_value_float(x8, _, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
-cbor(unsigned(P, X)) :- place_value(P, X).
-cbor(negative(P, X)) :-
-  #X #< 0,
-  #X + #V #= -1,
-  place_value(P, V).
+cbor(unsigned(P, X)) :- cbor_unsigned(P, X).
+cbor(negative(P, X)) :- cbor_negative(P, X).
 cbor(bytes(L, X)) :- cbor_bytes(L, X).
 cbor(text(L, X)) :- cbor_text(L, X).
-cbor(array(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
-cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
-cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
+cbor(array(L, X)) :- cbor_array(L, X).
+cbor(map(L, X)) :- cbor_map(L, X).
+cbor(tag(P, T, X)) :- cbor_tag(P, T, X).
 cbor(simple(P, X)) :- cbor_simple(P, X).
 cbor(float(P, X)) :- cbor_float(P, X).
 
@@ -277,6 +289,9 @@ place_value(x8, V) :- quad(V).
 lengthindicator_length(len(P, N), N) :- place_value(P, N).
 lengthindicator_length(*, N) :- byte(N).
 
+cbor_unsigned(P, X) :- place_value(P, X).
+cbor_negative(P, X) :- #X #< 0, #X + #V #= -1, place_value(P, V).
+
 %% definite_bytes(+Bytes) is semidet. % doc(definite_bytes/1).
 %% definite_bytes(?Bytes) is nondet.
 %
@@ -302,7 +317,12 @@ definite_text(text(len(P, N), X)) :- place_value(P, N), chars_utf8bytes(X, L), l
 cbor_text(len(P, N), X) :- place_value(P, N), chars_utf8bytes(X, L), length(L, N).
 cbor_text(*, X) :- maplist(definite_text, X).
 
+cbor_array(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
+
+cbor_map(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
 pair_of_cbor(Key-Value) :- cbor(Key), cbor(Value).
+
+cbor_tag(P, T, X) :- place_value(P, T), cbor(X).
 
 cbor_simple(i , X) :- place_value(i , X).
 cbor_simple(x1, X) :- place_value(x1, X).
