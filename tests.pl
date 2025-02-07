@@ -320,6 +320,22 @@ test_convert_float_sii_1d0_decode :-
   cbor(X),
 true.
 
+test_on_nwf_fail_reserved_28_decode :-
+  In = "\x1c\",
+  % Note: This is a test on failure
+  call_cleanup(
+    ( phrase(cbor_item(_, [on_nwf(fail)]), In) ; true ),
+    ( Ok = ok )
+  ),
+  Ok == ok,
+true.
+
+test_on_nwf_wrap_reserved_28_decode :-
+  In = "\x1c\",
+  phrase(cbor_item(X, [on_nwf(wrap)]), In),
+  X == nwf(28),
+true.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 meta_test_rfc8949_encode(In, Out) :-
