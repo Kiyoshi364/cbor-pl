@@ -25,6 +25,8 @@
   place_value/2,
   lengthindicator_length/2,
 
+  nwf_cbor/1,
+
   % Public DCGs
   cbor_item//1,
   cbor_item//2

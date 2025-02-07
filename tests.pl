@@ -4,6 +4,7 @@
 
 :- use_module(cbor, [
   cbor/1,
+  nwf_cbor/1,
   cbor_item//1,
   cbor_item//2
 ]).
@@ -338,17 +339,29 @@ true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) Begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-meta_test_rfc8949_encode(In, Out) :-
-  cbor(Out),
-  meta_test_rfc8949_encode(In, Out, XIn), XIn == In.
-meta_test_rfc8949_encode(_, Out, XIn) :-
-  phrase(cbor_item(Out), XIn).
+meta_test_rfc8949_encode(In, Out) :- cbor(Out), meta_test_rfc8949_encode(In, Out, []).
+meta_test_rfc8949_encode(In, Out, Options) :-
+  meta_test_rfc8949_encode(In, Out, Options, XIn), XIn == In.
+meta_test_rfc8949_encode(_, Out, Options, XIn) :-
+  phrase(cbor_item(Out, Options), XIn).
 
-meta_test_rfc8949_decode(In, Out) :-
-  cbor(Out),
-  meta_test_rfc8949_decode(In, Out, XOut), XOut == Out.
-meta_test_rfc8949_decode(In, _, XOut) :-
-  phrase(cbor_item(XOut), In).
+meta_test_rfc8949_decode(In, Out) :- cbor(Out), meta_test_rfc8949_decode(In, Out, []).
+meta_test_rfc8949_decode(In, Out, Options) :-
+  meta_test_rfc8949_decode(In, Out, Options, XOut), XOut == Out.
+meta_test_rfc8949_decode(In, _, Options, XOut) :-
+  phrase(cbor_item(XOut, Options), In).
+
+meta_test_rfc8949_nwf_encode(In, Out, Options) :-
+  % TODO: uncomment when `nwf_cbor/1` is implemented
+  % nwf_cbor(Out),
+  meta_test_rfc8949_encode(In, Out, Options).
+meta_test_rfc8949_nwf_encode(In, Out, Options, X) :- meta_test_rfc8949_encode(In, Out, Options, X).
+
+meta_test_rfc8949_nwf_decode(In, Out, Options) :-
+  % TODO: uncomment when `nwf_cbor/1` is implemented
+  % nwf_cbor(Out),
+  meta_test_rfc8949_decode(In, Out, Options).
+meta_test_rfc8949_nwf_decode(In, Out, Options, X) :- meta_test_rfc8949_decode(In, Out, Options, X).
 
 test_rfc8949_0_decode :-
   headerlist_payload_input("\x00\", "", In),
@@ -1697,6 +1710,409 @@ test_rfc8949_map_indefinite_funtrue_amtm2_encode :-
 true.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix A) End   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix F) Start %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_00_decode).
+test_rfc8949_nwf_two_byte_simple_value_00_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xf8\\x00\", "", In),
+  BIn = [0xf8, 0x00],
+  maplist(code_char, BIn, In),
+  Out = nwf(simple(x1, 0x00)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_00_encode).
+test_rfc8949_nwf_two_byte_simple_value_00_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xf8\\x00\", "", In),
+  BIn = [0xf8, 0x00],
+  maplist(code_char, BIn, In),
+  Out = nwf(simple(x1, 0x00)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_01_decode).
+test_rfc8949_nwf_two_byte_simple_value_01_decode :-
+  headerlist_payload_input("\xf8\\x01\", "", In),
+  Out = nwf(simple(x1, 0x01)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_01_encode).
+test_rfc8949_nwf_two_byte_simple_value_01_encode :-
+  headerlist_payload_input("\xf8\\x01\", "", In),
+  Out = nwf(simple(x1, 0x01)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_18_decode).
+test_rfc8949_nwf_two_byte_simple_value_18_decode :-
+  headerlist_payload_input("\xf8\\x18\", "", In),
+  Out = nwf(simple(x1, 0x18)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_18_encode).
+test_rfc8949_nwf_two_byte_simple_value_18_encode :-
+  headerlist_payload_input("\xf8\\x18\", "", In),
+  Out = nwf(simple(x1, 0x18)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_1f_decode).
+test_rfc8949_nwf_two_byte_simple_value_1f_decode :-
+  headerlist_payload_input("\xf8\\x1f\", "", In),
+  Out = nwf(simple(x1, 0x1f)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_two_byte_simple_value_1f_encode).
+test_rfc8949_nwf_two_byte_simple_value_1f_encode :-
+  headerlist_payload_input("\xf8\\x1f\", "", In),
+  Out = nwf(simple(x1, 0x1f)),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_00_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_00_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x00\\xff\", "", In),
+  BIn = [0x5f, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(unsigned(i, 0x00))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_00_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_00_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x00\\xff\", "", In),
+  BIn = [0x5f, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(unsigned(i, 0x00))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_negative_2_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_negative_2_decode :-
+  headerlist_payload_input("\x5f\\x21\\xff\", "", In),
+  Out = bytes(*, [nwf(negative(i, -2))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_negative_2_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_negative_2_encode :-
+  headerlist_payload_input("\x5f\\x21\\xff\", "", In),
+  Out = bytes(*, [nwf(negative(i, -2))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_text_null_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_text_null_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x61\\x00\\xff\", "", In),
+  BIn = [0x5f, 0x61, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(text(len(i, 1), "\x00\"))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_text_null_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_text_null_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x61\\x00\\xff\", "", In),
+  BIn = [0x5f, 0x61, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(text(len(i, 1), "\x00\"))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_array_empty_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_array_empty_decode :-
+  headerlist_payload_input("\x5f\\x80\\xff\", "", In),
+  Out = bytes(*, [nwf(array(len(i, 0), []))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_array_empty_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_array_empty_encode :-
+  headerlist_payload_input("\x5f\\x80\\xff\", "", In),
+  Out = bytes(*, [nwf(array(len(i, 0), []))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_map_empty_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_map_empty_decode :-
+  headerlist_payload_input("\x5f\\xa0\\xff\", "", In),
+  Out = bytes(*, [nwf(map(len(i, 0), []))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_map_empty_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_map_empty_encode :-
+  headerlist_payload_input("\x5f\\xa0\\xff\", "", In),
+  Out = bytes(*, [nwf(map(len(i, 0), []))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_tag0_0_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_tag0_0_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\xc0\\x00\\xff\", "", In),
+  BIn = [0x5f, 0xc0, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(tag(i, 0, unsigned(i, 0)))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_tag0_0_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_tag0_0_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\xc0\\x00\\xff\", "", In),
+  BIn = [0x5f, 0xc0, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(tag(i, 0, unsigned(i, 0)))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_simple_0_decode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_simple_0_decode :-
+  headerlist_payload_input("\x5f\\xe0\\xff\", "", In),
+  Out = bytes(*, [nwf(simple(i, 0))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_not_correct_type_simple_0_encode).
+test_rfc8949_nwf_indefinite_bytes_not_correct_type_simple_0_encode :-
+  headerlist_payload_input("\x5f\\xe0\\xff\", "", In),
+  Out = bytes(*, [nwf(simple(i, 0))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_text_not_correct_type_bytes_00_decode).
+test_rfc8949_nwf_indefinite_text_not_correct_type_bytes_00_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x7f\\x41\\x00\\xff\", "", In),
+  BIn = [0x7f, 0x41, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = text(*, [nwf(bytes(len(i, 1), [0x00]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_text_not_correct_type_bytes_00_encode).
+test_rfc8949_nwf_indefinite_text_not_correct_type_bytes_00_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x7f\\x41\\x00\\xff\", "", In),
+  BIn = [0x7f, 0x41, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = text(*, [nwf(bytes(len(i, 1), [0x00]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_indefinite_bytes_decode).
+test_rfc8949_nwf_indefinite_bytes_indefinite_bytes_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x5f\\x41\\x00\\xff\\xff\", "", In),
+  BIn = [0x5f, 0x5f, 0x41, 0x00, 0xff, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(bytes(*, [bytes(len(i, 1), [0x00])]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_bytes_indefinite_bytes_encode).
+test_rfc8949_nwf_indefinite_bytes_indefinite_bytes_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x5f\\x5f\\x41\\x00\\xff\\xff\", "", In),
+  BIn = [0x5f, 0x5f, 0x41, 0x00, 0xff, 0xff],
+  maplist(code_char, BIn, In),
+  Out = bytes(*, [nwf(bytes(*, [bytes(len(i, 1), [0x00])]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_text_indefinite_text_decode).
+test_rfc8949_nwf_indefinite_text_indefinite_text_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x7f\\x7f\\x61\\x00\\xff\\xff\", "", In),
+  BIn = [0x7f, 0x7f, 0x61, 0x00, 0xff, 0xff],
+  maplist(code_char, BIn, In),
+  Out = text(*, [nwf(text(*, [text(len(i, 1), "\x00\")]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_text_indefinite_text_encode).
+test_rfc8949_nwf_indefinite_text_indefinite_text_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x7f\\x7f\\x61\\x00\\xff\\xff\", "", In),
+  BIn = [0x7f, 0x7f, 0x61, 0x00, 0xff, 0xff],
+  maplist(code_char, BIn, In),
+  Out = text(*, [nwf(text(*, [text(len(i, 1), "\x00\")]))]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_outside_indefinite_item_decode :-
+  headerlist_payload_input("\xff\", "", In),
+  Out = nwf(break),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_outside_indefinite_item_encode :-
+  headerlist_payload_input("\xff\", "", In),
+  Out = nwf(break),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_array_break_decode :-
+  headerlist_payload_input("\x81\\xff\", "", In),
+  Out = array(len(i, 1), [nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_array_break_encode :-
+  headerlist_payload_input("\x81\\xff\", "", In),
+  Out = array(len(i, 1), [nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_array_0_break_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x82\\x00\\xff\", "", In),
+  BIn = [0x82, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = array(len(i, 1), [unsigned(i, 0), nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_array_0_break_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\x82\\x00\\xff\", "", In),
+  BIn = [0x82, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = array(len(i, 1), [unsigned(i, 0), nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_map_0_break_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xa1\\x00\\xff\", "", In),
+  BIn = [0xa1, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = map(len(i, 1), [unsigned(i, 0)-nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_map_0_break_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xa1\\x00\\xff\", "", In),
+  BIn = [0xa1, 0x00, 0xff],
+  maplist(code_char, BIn, In),
+  Out = map(len(i, 1), [unsigned(i, 0)-nwf(break)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_map_break_0_decode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xa1\\xff\\x00\", "", In),
+  BIn = [0xa1, 0xff, 0x00],
+  maplist(code_char, BIn, In),
+  Out = map(len(i, 1), [nwf(break)-unsigned(i, 0)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_break_inside_map_break_0_encode :-
+  % Cannot use headerlist_payload_input/3, because there is a zero byte.
+  % headerlist_payload_input("\xa1\\xff\\x00\", "", In),
+  BIn = [0xa1, 0xff, 0x00],
+  maplist(code_char, BIn, In),
+  Out = map(len(i, 1), [nwf(break)-unsigned(i, 0)]),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_indefinite_unsigned_decode :-
+  headerlist_payload_input("\x1f\", "", In),
+  Out = nwf(0x1f),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_unsigned_encode).
+test_rfc8949_nwf_indefinite_unsigned_encode :-
+  headerlist_payload_input("\x1f\", "", In),
+  Out = nwf(0x1f),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_indefinite_negative_decode :-
+  headerlist_payload_input("\x3f\", "", In),
+  Out = nwf(0x3f),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_negative_encode).
+test_rfc8949_nwf_indefinite_negative_encode :-
+  headerlist_payload_input("\x3f\", "", In),
+  Out = nwf(0x3f),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+test_rfc8949_nwf_indefinite_tag_decode :-
+  headerlist_payload_input("\xdf\", "", In),
+  Out = nwf(0xdf),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_decode(In, Out, Options),
+true.
+
+nwdet(test_rfc8949_nwf_indefinite_tag_encode).
+test_rfc8949_nwf_indefinite_tag_encode :-
+  headerlist_payload_input("\xdf\", "", In),
+  Out = nwf(0xdf),
+  Options = [on_nwf(wrap)],
+  meta_test_rfc8949_nwf_encode(In, Out, Options),
+true.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RFC 8949 (Appendix F) End   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 prefix_module_predicates(Prefix, M, Ps) :-
   ( findall(T,
