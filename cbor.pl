@@ -56,6 +56,7 @@
   op(150, fx, #)
 ]).
 :- use_module(library(charsio), [chars_utf8bytes/2]).
+% TODO: try to use if_/3 and reification, instead of dif/2
 :- use_module(library(dif), [dif/2]).
 :- use_module(library(freeze), [freeze/2]).
 :- use_module(library(error), [must_be/2, instantiation_error/1, domain_error/3]).
@@ -255,6 +256,7 @@
 %    cbor(float(x8, X)) :- size_int_float(x8, _, X).
 %  ```
 %  but it puts emphasis on first argument indexing.
+% TODO: use reified version cbor_t
 cbor(unsigned(P, X)) :- cbor_unsigned(P, X).
 cbor(negative(P, X)) :- cbor_negative(P, X).
 cbor(bytes(L, X)) :- cbor_bytes(L, X).
