@@ -7,7 +7,7 @@
   Consider reading documentation for `cbor/1` before
   using the main predicate `cbor_item//1`.
   This library is tested for [Scryer Prolog](https://scryer.pl)
-  version 8ac663d.
+  version 8ac663d (after v0.9.4).
 */
 :- module(cbor, [
   % Documentation predicates
