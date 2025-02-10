@@ -1,14 +1,2 @@
-cbor_tests:test_rfc8949_nwf_break_outside_indefinite_item_decode failed!
-cbor_tests:test_rfc8949_nwf_break_outside_indefinite_item_encode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_array_break_decode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_array_break_encode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_array_0_break_decode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_array_0_break_encode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_map_0_break_decode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_map_0_break_encode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_map_break_0_decode failed!
-cbor_tests:test_rfc8949_nwf_break_inside_map_break_0_encode failed!
-
-10 tests failed!
-226 tests passed.
-127 tests not well-behaved deterministic supreessed.
+236 tests passed.
+131 tests not well-behaved deterministic supreessed.

@@ -2000,6 +2000,7 @@ test_rfc8949_nwf_break_inside_array_break_decode :-
   meta_test_rfc8949_nwf_decode(In, Out, Options),
 true.
 
+nwdet(test_rfc8949_nwf_break_inside_array_break_encode).
 test_rfc8949_nwf_break_inside_array_break_encode :-
   headerlist_payload_input("\x81\\xff\", "", In),
   Out = array(len(i, 1), [nwf(break)]),
@@ -2012,17 +2013,18 @@ test_rfc8949_nwf_break_inside_array_0_break_decode :-
   % headerlist_payload_input("\x82\\x00\\xff\", "", In),
   BIn = [0x82, 0x00, 0xff],
   maplist(code_char, BIn, In),
-  Out = array(len(i, 1), [unsigned(i, 0), nwf(break)]),
+  Out = array(len(i, 2), [unsigned(i, 0), nwf(break)]),
   Options = [on_nwf(wrap)],
   meta_test_rfc8949_nwf_decode(In, Out, Options),
 true.
 
+nwdet(test_rfc8949_nwf_break_inside_array_0_break_encode).
 test_rfc8949_nwf_break_inside_array_0_break_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\x82\\x00\\xff\", "", In),
   BIn = [0x82, 0x00, 0xff],
   maplist(code_char, BIn, In),
-  Out = array(len(i, 1), [unsigned(i, 0), nwf(break)]),
+  Out = array(len(i, 2), [unsigned(i, 0), nwf(break)]),
   Options = [on_nwf(wrap)],
   meta_test_rfc8949_nwf_encode(In, Out, Options),
 true.
@@ -2037,6 +2039,7 @@ test_rfc8949_nwf_break_inside_map_0_break_decode :-
   meta_test_rfc8949_nwf_decode(In, Out, Options),
 true.
 
+nwdet(test_rfc8949_nwf_break_inside_map_0_break_encode).
 test_rfc8949_nwf_break_inside_map_0_break_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xa1\\x00\\xff\", "", In),
@@ -2057,6 +2060,7 @@ test_rfc8949_nwf_break_inside_map_break_0_decode :-
   meta_test_rfc8949_nwf_decode(In, Out, Options),
 true.
 
+nwdet(test_rfc8949_nwf_break_inside_map_break_0_encode).
 test_rfc8949_nwf_break_inside_map_break_0_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\xa1\\xff\\x00\", "", In),

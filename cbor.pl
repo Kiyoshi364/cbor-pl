@@ -56,11 +56,10 @@
   op(150, fx, #)
 ]).
 :- use_module(library(charsio), [chars_utf8bytes/2]).
-% TODO: try to use if_/3 and reification, instead of dif/2
-:- use_module(library(dif), [dif/2]).
 :- use_module(library(freeze), [freeze/2]).
 :- use_module(library(error), [must_be/2, instantiation_error/1, domain_error/3]).
 :- use_module(library(lists), [member/2, foldl/4, maplist/2, length/2]).
+:- use_module(library(reif), [if_/3, dif/3]).
 
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
@@ -485,9 +484,11 @@ cbor_item(X, OptList) -->
   { parse_options(OptList, Options) },
   cbor_item_(Options, X).
 
-cbor_item_(Options, X) -->
+cbor_item_(Options, X) --> cbor_item_(Options, X, nobreak).
+
+cbor_item_(Options, X, B) -->
   cbor_major_value(Major, Value, Options),
-  cbor_major_value_x(Major, Value, X, Options).
+  cbor_major_value_x(Major, Value, X, Options, B).
 
 parse_options(OptList, Options) :-
   must_be(list, OptList),
@@ -647,70 +648,70 @@ cbor_minor_value(29, reserved_29, _) --> [].
 cbor_minor_value(30, reserved_30, _) --> [].
 cbor_minor_value(31, indefinite, _) --> [].
 
-cbor_major_value_x(0, Value, X, Options) --> cbor_0_value_x(Value, X, Options).
-cbor_major_value_x(1, Value, X, Options) --> cbor_1_value_x(Value, X, Options).
-cbor_major_value_x(2, Value, X, Options) --> cbor_2_value_x(Value, X, Options).
-cbor_major_value_x(3, Value, X, Options) --> cbor_3_value_x(Value, X, Options).
-cbor_major_value_x(4, Value, X, Options) --> cbor_4_value_x(Value, X, Options).
-cbor_major_value_x(5, Value, X, Options) --> cbor_5_value_x(Value, X, Options).
-cbor_major_value_x(6, Value, X, Options) --> cbor_6_value_x(Value, X, Options).
-cbor_major_value_x(7, Value, X, Options) --> cbor_7_value_x(Value, X, Options).
+cbor_major_value_x(0, Value, X, Options, B) --> cbor_0_value_x(Value, X, Options, B).
+cbor_major_value_x(1, Value, X, Options, B) --> cbor_1_value_x(Value, X, Options, B).
+cbor_major_value_x(2, Value, X, Options, B) --> cbor_2_value_x(Value, X, Options, B).
+cbor_major_value_x(3, Value, X, Options, B) --> cbor_3_value_x(Value, X, Options, B).
+cbor_major_value_x(4, Value, X, Options, B) --> cbor_4_value_x(Value, X, Options, B).
+cbor_major_value_x(5, Value, X, Options, B) --> cbor_5_value_x(Value, X, Options, B).
+cbor_major_value_x(6, Value, X, Options, B) --> cbor_6_value_x(Value, X, Options, B).
+cbor_major_value_x(7, Value, X, Options, B) --> cbor_7_value_x(Value, X, Options, B).
 
-cbor_0_value_x(val(P, V), unsigned(P, V), _) --> [].
+cbor_0_value_x(val(P, V), unsigned(P, V), _, _) --> [].
 % Not well-formed: 0x00 + 28 = 28
-cbor_0_value_x(reserved_28, V, Options) --> { options_nwf(Options, 28, V) }.
-cbor_0_value_x(reserved_29, V, Options) --> { options_nwf(Options, 29, V) }.
-cbor_0_value_x(reserved_30, V, Options) --> { options_nwf(Options, 30, V) }.
-cbor_0_value_x(indefinite , V, Options) --> { options_nwf(Options, 31, V) }.
+cbor_0_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 28, V) }.
+cbor_0_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 29, V) }.
+cbor_0_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 30, V) }.
+cbor_0_value_x(indefinite , V, Options, _) --> { options_nwf(Options, 31, V) }.
 
-cbor_1_value_x(val(P, V), negative(P, X), _) --> { #X #< 0, #X + #V #= -1 }.
+cbor_1_value_x(val(P, V), negative(P, X), _, _) --> { #X #< 0, #X + #V #= -1 }.
 % Not well-formed: 0x20 + 28 = 60
-cbor_1_value_x(reserved_28, V, Options) --> { options_nwf(Options, 60, V) }.
-cbor_1_value_x(reserved_29, V, Options) --> { options_nwf(Options, 61, V) }.
-cbor_1_value_x(reserved_30, V, Options) --> { options_nwf(Options, 62, V) }.
-cbor_1_value_x(indefinite , V, Options) --> { options_nwf(Options, 63, V) }.
+cbor_1_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 60, V) }.
+cbor_1_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 61, V) }.
+cbor_1_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 62, V) }.
+cbor_1_value_x(indefinite , V, Options, _) --> { options_nwf(Options, 63, V) }.
 
-cbor_2_value_x(val(P, V), bytes(len(P, V), X), Options) --> numberbytes_list(V, X, Options).
+cbor_2_value_x(val(P, V), bytes(len(P, V), X), Options, _) --> numberbytes_list(V, X, Options).
 % Not well-formed: 0x40 + 28 = 92
-cbor_2_value_x(reserved_28, V, Options) --> { options_nwf(Options, 92, V) }.
-cbor_2_value_x(reserved_29, V, Options) --> { options_nwf(Options, 93, V) }.
-cbor_2_value_x(reserved_30, V, Options) --> { options_nwf(Options, 94, V) }.
-cbor_2_value_x(indefinite, bytes(*, X), Options) --> indefinite_bytes(X, Options).
+cbor_2_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 92, V) }.
+cbor_2_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 93, V) }.
+cbor_2_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 94, V) }.
+cbor_2_value_x(indefinite, bytes(*, X), Options, _) --> indefinite_bytes(X, Options).
 
-cbor_3_value_x(val(P, V), text(len(P, V), X), Options) --> numberbytes_text(V, X, Options).
+cbor_3_value_x(val(P, V), text(len(P, V), X), Options, _) --> numberbytes_text(V, X, Options).
 % Not well-formed: 0x60 + 28 = 124
-cbor_3_value_x(reserved_28, V, Options) --> { options_nwf(Options, 124, V) }.
-cbor_3_value_x(reserved_29, V, Options) --> { options_nwf(Options, 125, V) }.
-cbor_3_value_x(reserved_30, V, Options) --> { options_nwf(Options, 126, V) }.
-cbor_3_value_x(indefinite, text(*, X), Options) --> indefinite_text(X, Options).
+cbor_3_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 124, V) }.
+cbor_3_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 125, V) }.
+cbor_3_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 126, V) }.
+cbor_3_value_x(indefinite, text(*, X), Options, _) --> indefinite_text(X, Options).
 
-cbor_4_value_x(val(P, V), array(len(P, V), X), Options) --> numberbytes_array(V, X, Options).
+cbor_4_value_x(val(P, V), array(len(P, V), X), Options, _) --> numberbytes_array(V, X, Options).
 % Not well-formed: 0x80 + 28 = 156
-cbor_4_value_x(reserved_28, V, Options) --> { options_nwf(Options, 156, V) }.
-cbor_4_value_x(reserved_29, V, Options) --> { options_nwf(Options, 157, V) }.
-cbor_4_value_x(reserved_30, V, Options) --> { options_nwf(Options, 158, V) }.
-cbor_4_value_x(indefinite, array(*, X), Options) --> indefinite_array(X, Options).
+cbor_4_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 156, V) }.
+cbor_4_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 157, V) }.
+cbor_4_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 158, V) }.
+cbor_4_value_x(indefinite, array(*, X), Options, _) --> indefinite_array(X, Options).
 
-cbor_5_value_x(val(P, V), map(len(P, V), X), Options) --> numberbytes_map(V, X, Options).
+cbor_5_value_x(val(P, V), map(len(P, V), X), Options, _) --> numberbytes_map(V, X, Options).
 % Not well-formed: 0xa0 + 28 = 188
-cbor_5_value_x(reserved_28, V, Options) --> { options_nwf(Options, 188, V) }.
-cbor_5_value_x(reserved_29, V, Options) --> { options_nwf(Options, 189, V) }.
-cbor_5_value_x(reserved_30, V, Options) --> { options_nwf(Options, 190, V) }.
-cbor_5_value_x(indefinite, map(*, X), Options) --> indefinite_map(X, Options).
+cbor_5_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 188, V) }.
+cbor_5_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 189, V) }.
+cbor_5_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 190, V) }.
+cbor_5_value_x(indefinite, map(*, X), Options, _) --> indefinite_map(X, Options).
 
-cbor_6_value_x(val(P, V), tag(P, V, X), Options) --> cbor_item_(Options, X).
+cbor_6_value_x(val(P, V), tag(P, V, X), Options, _) --> cbor_item_(Options, X).
 % Not well-formed: 0xc0 + 28 = 220
-cbor_6_value_x(reserved_28, V, Options) --> { options_nwf(Options, 220, V) }.
-cbor_6_value_x(reserved_29, V, Options) --> { options_nwf(Options, 221, V) }.
-cbor_6_value_x(reserved_30, V, Options) --> { options_nwf(Options, 222, V) }.
-cbor_6_value_x(indefinite,  V, Options) --> { options_nwf(Options, 223, V) }.
+cbor_6_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 220, V) }.
+cbor_6_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 221, V) }.
+cbor_6_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 222, V) }.
+cbor_6_value_x(indefinite,  V, Options, _) --> { options_nwf(Options, 223, V) }.
 
-cbor_7_value_x(val(P, V), X, Options) --> { simple_or_float(P, V, X, Options) }.
+cbor_7_value_x(val(P, V), X, Options, _) --> { simple_or_float(P, V, X, Options) }.
 % Not well-formed: 0xe0 + 28 = 252
-cbor_7_value_x(reserved_28, V, Options) --> { options_nwf(Options, 252, V) }.
-cbor_7_value_x(reserved_29, V, Options) --> { options_nwf(Options, 253, V) }.
-cbor_7_value_x(reserved_30, V, Options) --> { options_nwf(Options, 254, V) }.
-cbor_7_value_x(indefinite,  break, _) --> [].
+cbor_7_value_x(reserved_28, V, Options, _) --> { options_nwf(Options, 252, V) }.
+cbor_7_value_x(reserved_29, V, Options, _) --> { options_nwf(Options, 253, V) }.
+cbor_7_value_x(reserved_30, V, Options, _) --> { options_nwf(Options, 254, V) }.
+cbor_7_value_x(indefinite,  V, Options, B) --> { break_value(B, V, Options) }.
 
 numbytes_number(1, X, Opts) --> { option(listOf, ListOf, Opts) }, byte(ListOf, X).
 numbytes_number(2, X, Opts) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
@@ -751,8 +752,11 @@ map_uni(Val, Key-Val, Key).
 
 :- meta_predicate(indefinite_help_(?, 2, 4, ?, ?, ?)).
 
-indefinite_help_([], _, _, Options) --> cbor_item_(Options, break).
-indefinite_help_([V | X], Out_In, DCG, Options) --> { call(cbor:Out_In, V, Item), dif(Item, break) }, cbor_item_(Options, Item), call(cbor:DCG, X, Options).
+indefinite_help_([], _, _, Options) --> cbor_item_(Options, break, break).
+indefinite_help_([V | X], Out_In, DCG, Options) -->
+  { call(cbor:Out_In, V, Item0), if_(dif(Item0, break), Item = Item0, Item = nwf(break)) },
+  cbor_item_(Options, Item, nobreak),
+  call(cbor:DCG, X, Options).
 
 simple_or_float(i, V, simple(i, V), _) :- V in 0..23.
 simple_or_float(x1, V, S, Options) :-
@@ -791,3 +795,6 @@ options_nwf(Options, Item, V) :-
 
 options_nwf_(fail, _, _) :- false.
 options_nwf_(wrap, Item, nwf(Item)).
+
+break_value(break  , break, _).
+break_value(nobreak, V, Options) :- options_nwf(Options, break, V).
