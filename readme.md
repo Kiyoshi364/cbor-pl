@@ -45,8 +45,8 @@ into another implementation of the library.
 
 # Mirrors
 
-* [github.com/Kiyoshi364/cbor-pl](https://github.com/Kiyoshi364/cbor-pl)
 * [gitlab.com/Hashi364/cbor-pl](https://gitlab.com/Hashi364/cbor-pl)
+* [github.com/Kiyoshi364/cbor-pl](https://github.com/Kiyoshi364/cbor-pl)
 
 # How to use
 

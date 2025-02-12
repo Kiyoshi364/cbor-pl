@@ -14,6 +14,11 @@
   LICENSE
 
     See end of file for license information.
+
+  MIRRORS
+
+  * https://gitlab.com/Hashi364/cbor-pl
+  * https://github.com/Kiyoshi364/cbor-pl
 */
 :- module(cbor, [
   % Documentation predicates
