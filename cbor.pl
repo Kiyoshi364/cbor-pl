@@ -1,5 +1,7 @@
-/**
-  A simple library for quickly lifting one out of raw bytes
+/** cbor.pl
+
+  A prolog library for reasoning about CBOR.
+  The library provides a way of lifting one out of raw bytes
   without losing any possible representation for CBOR Values.
   Possibly a good foundation for building
   a higher-level CBOR encoder/decoder.
