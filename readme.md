@@ -17,7 +17,7 @@ Features:
   ?- phrase(cbor_item(bytes(len(i, 2), [0x00, 0x01]), [listOf(byte)]), S).
      S = [66,0,1]
   ;  false.
-    ?- phrase(cbor_item(bytes(len(i, N), [0x00, 0x01]), [listOf(byte)]), S).
+  ?- phrase(cbor_item(bytes(len(i, N), [0x00, 0x01]), [listOf(byte)]), S).
      N = 2, S = [66,0,1]
   ;  false.
   ```
