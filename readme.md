@@ -29,7 +29,7 @@ in lines with `:- use_module(...).`.
 
 * Definite Clause Grammars (DCGs)
 * [Constraint Logic Programming over Integers (CLPZ)](https://github.com/triska/clpz) (in Scryer Prolog's standard library)
-* `freeze/2` from `library(freeze)` (maybe a builtin predicate)
+* `freeze/2` from [`library(freeze)`](https://github.com/mthom/scryer-prolog/blob/master/src/lib/freeze.pl) (maybe a builtin predicate)
 * `member/2`, `foldl/4`, `maplist/2`, `length/2` from [`library(lists)`](https://github.com/mthom/scryer-prolog/blob/master/src/lib/lists.pl) (maybe builtin predicates)
 * `if_/3`, `dif/3` from [`library(reif)`](https://github.com/mthom/scryer-prolog/blob/master/src/lib/error.pl) (depends on `dif/2`, maybe builtin predicates)
 
