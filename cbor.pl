@@ -638,7 +638,9 @@ cbor_minor_value(20, val(i, 20), _) --> [].
 cbor_minor_value(21, val(i, 21), _) --> [].
 cbor_minor_value(22, val(i, 22), _) --> [].
 cbor_minor_value(23, val(i, 23), _) --> [].
-% NOTE: {true} makes it work for encoding, possibly a bug on scryer side?
+/* NOTE: {true} makes it work for encoding,
+ * possibly a bug on scryer side?
+ **/
 cbor_minor_value(24, val(x1, V), Options) --> {true}, numbytes_number(1, V, Options).
 cbor_minor_value(25, val(x2, V), Options) --> {true}, numbytes_number(2, V, Options).
 cbor_minor_value(26, val(x4, V), Options) --> {true}, numbytes_number(4, V, Options).
@@ -717,9 +719,10 @@ numbytes_number(1, X, Opts) --> { option(listOf, ListOf, Opts) }, byte(ListOf, X
 numbytes_number(2, X, Opts) --> { N = 1, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
 numbytes_number(4, X, Opts) --> { N = 2, #X1_ #= #X1 << (8 * N), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
 numbytes_number(8, X, Opts) --> { N = 4, #X1_ #= #X1 * (2 ^ (8 * N)), #X #= #X1_ \/ #X0, #X #= #X1_ xor #X0, #X1 #= #X >> (8 * N) }, numbytes_number(N, X1, Opts), numbytes_number(N, X0, Opts).
-% NOTE: `X * (2 ^ (8 * 4))` and `X << (8 * 4)` have the same result,
-%  unless if `X in 0x80000000..0xffffffff`.
-%  This happens, because the result is interpreted as an negative 64bit number.
+/* NOTE: `X * (2 ^ (8 * 4))` and `X << (8 * 4)` have the same result,
+ * unless if `X in 0x80000000..0xffffffff`.
+ * This happens, because the result is interpreted as an negative 64bit number.
+ */
 
 numberbytes_list(N, L, Options) --> { option(listOf, ListOf, Options), length(L, N) }, bytelist(L, ListOf).
 numberbytes_text(N, T, Options) --> numberbytes_list(N, L, Options), { option(bytes_text, BT_2, Options), call(BT_2, L, T) }.
