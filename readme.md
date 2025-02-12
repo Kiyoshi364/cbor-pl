@@ -49,7 +49,7 @@ into another implementation of the library.
 
 # How to use
 
-1. Download [cbor.pl](file://cbor.pl)
+1. Download [cbor.pl](cbor.pl)
 
 2. Import the library:
 ```prolog
@@ -76,8 +76,8 @@ into another implementation of the library.
 
 ## How to learn the library
 
-* Option 1: read documentation (comments inside [cbor.pl](file://cbor.pl)).
+* Option 1: read documentation (comments inside [cbor.pl](cbor.pl)).
   Consider searching for `doc(Pred/N).`, where `Pred` is your desired predicate with arity `N`.
 
-* Option 2: read code (consider [cbor.pl](file://cbor.pl), [example.pl](file://example.pl), [tests.pl](file://tests.pl))
+* Option 2: read code (consider [cbor.pl](cbor.pl), [example.pl](example.pl), [tests.pl](tests.pl)).
   Consider using `grep -v '^%' cbor.pl`.
