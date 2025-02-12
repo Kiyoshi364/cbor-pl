@@ -814,7 +814,7 @@ break_value(nobreak, V, Options) :- options_nwf(Options, break, V).
 /*
   The MIT License (MIT)
 
-  Copyright (c) 2025 Daniel K Hashimoto
+  Copyright (c) 2025 Daniel K Hashimoto <dkhashimoto@ic.ufrj.br>
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
