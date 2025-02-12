@@ -328,7 +328,7 @@ pair_of_cbor(Key-Value) :- cbor(Key), cbor(Value).
 cbor_tag(P, T) :- place_value(P, T).
 
 cbor_simple(i , X) :- place_value(i , X).
-cbor_simple(x1, X) :- place_value(x1, X).
+cbor_simple(x1, X) :- place_value(x1, X), X in 0x20..0xffff.
 
 cbor_float(x2, X) :- size_int_float(x2, _, X).
 cbor_float(x4, X) :- size_int_float(x4, _, X).
