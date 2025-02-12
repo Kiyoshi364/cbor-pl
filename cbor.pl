@@ -19,6 +19,10 @@
 
   * https://gitlab.com/Hashi364/cbor-pl
   * https://github.com/Kiyoshi364/cbor-pl
+
+  CHANGELOG
+
+    2025-02-12 v0.0  First Released Version
 */
 :- module(cbor, [
   % Documentation predicates
