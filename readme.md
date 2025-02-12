@@ -78,6 +78,7 @@ into another implementation of the library.
 
 * Option 1: read documentation (comments inside [cbor.pl](cbor.pl)).
   Consider searching for `doc(Pred/N).`, where `Pred` is your desired predicate with arity `N`.
+  Consider reading documentation for exported predicates under `% Documentation predicates`.
 
 * Option 2: read code (consider [cbor.pl](cbor.pl), [example.pl](example.pl), [tests.pl](tests.pl)).
   Consider using `grep -v '^%' cbor.pl`.
