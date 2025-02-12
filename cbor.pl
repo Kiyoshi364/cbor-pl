@@ -19,7 +19,7 @@
   cbor_array/2,
   cbor_map/2,
   pair_of_cbor/1,
-  cbor_tag/3,
+  cbor_tag/2,
   cbor_simple/2,
   cbor_float/2,
   place_value/2,
@@ -262,7 +262,7 @@ cbor(bytes(L, X)) :- cbor_bytes(L, X).
 cbor(text(L, X)) :- cbor_text(L, X).
 cbor(array(L, X)) :- cbor_array(L, X).
 cbor(map(L, X)) :- cbor_map(L, X).
-cbor(tag(P, T, X)) :- cbor_tag(P, T, X).
+cbor(tag(P, T, X)) :- cbor_tag(P, T), cbor(X).
 cbor(simple(P, X)) :- cbor_simple(P, X).
 cbor(float(P, X)) :- cbor_float(P, X).
 
@@ -325,7 +325,7 @@ cbor_array(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X)
 cbor_map(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
 pair_of_cbor(Key-Value) :- cbor(Key), cbor(Value).
 
-cbor_tag(P, T, X) :- place_value(P, T), cbor(X).
+cbor_tag(P, T) :- place_value(P, T).
 
 cbor_simple(i , X) :- place_value(i , X).
 cbor_simple(x1, X) :- place_value(x1, X).
