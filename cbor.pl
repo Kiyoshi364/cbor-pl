@@ -90,7 +90,7 @@
 %      Note that `cbor_item//1` also describes not well-formed CBOR Items,
 %      in order to support reading partial information from
 %      a not well-formed CBOR,
-%      for more information see `doc(cbor_item//1)`.
+%      for more information `see(cbor_item//1)`.
 %
 %  The prolog representation used in this library for a CBOR Item
 %  maps one-to-one to a serialized form of a certain CBOR Item.
@@ -115,7 +115,7 @@
 %  or some length used to find the value of the item
 %  (for byte string, byte string, array and map).
 %  `P` indicates where `V` lies in the byte encoding.
-%  See `doc(place_value/2)` for more info.
+%  `see(place_value/2)` for more info.
 %
 %  Another important functor for the representation
 %  is the length indicator.
@@ -124,7 +124,7 @@
 %  the length is `N` and it resides at place `P`,
 %  also `place_value(P, N)` must be true.
 %  In the second case `*`, the length is indefinite.
-%  See `doc(lengthindicator_length/2)` for more info.
+%  `see(lengthindicator_length/2)` for more info.
 %
 % # Major 0 -- Unsigned
 %
@@ -160,7 +160,7 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 2 (byte string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  See `doc(definite_bytes/1)`.
+%  `see(definite_bytes/1)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -179,7 +179,7 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 3 (text string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  See `doc(definite_text/1)`.
+%  `see(definite_text/1)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -246,7 +246,7 @@
 %    * `x2` means half   precision float (float16) (2 bytes),
 %    * `x4` means single precision float (float32) (4 bytes),
 %    * `x8` means double precision float (float64) (8 bytes),
-%  See `doc(size_int_float/3)`.
+%  `see(size_int_float/3)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -369,12 +369,10 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %  relations between prolog and serialized forms
 %  (more on this in #-Encoding-Features).
 %
-%  For more information on the prolog form,
-%  see `doc(cbor/1)`.
+%  For more information on the prolog form, `see(cbor/1)`.
 %  There is a sibling predicate `cbor_item//2`
 %  which receives options.
-%  To know more about these options,
-%  see `doc(option/3)`.
+%  To know more about these options, `see(option/3)`.
 %
 %  The predicate `cbor_item//1` is not suited for stream decoding.
 %  It means that
@@ -400,7 +398,7 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %  This behavior is disabled by default,
 %  to enable it use option `on_nwf(wrap)` on `cbor_item//2`.
 %  The default behavior (with `on_nwf(fail)`) is failing.
-%  (For more on this, see `doc(nwf_cbor/1)`, `doc(option/3)`).
+%  (For more on this, `see(nwf_cbor/1)`, `see(option/3)`).
 %
 % # Encoding Features
 %
@@ -475,7 +473,7 @@ cbor_item(X) --> cbor_item(X, []).
 %% phrase(cbor_item(?Item, +Options), +Chars) is semidet.
 %
 %  Similar to `cbor_item//1`, but with `Options`.
-%  See `doc(option/3)` for available options.
+%  `see(option/3)` for available options.
 %
 %  `Options` is a list.
 %  If repeating options are provided, the first is used.
@@ -546,7 +544,7 @@ parse_option(Selector, OptList) :-
 %    an `Integer` of size `Size` and
 %    the `Float` represented by the `Integer`.
 %    The predicate is used as `call(SIF_3, Size, Integer, Float)`.
-%    See `doce(size_integer_float/3)` for more information.
+%    `see(size_integer_float/3)` for more information.
 %
 %    The default value is `size_int_float`.
 %    At the moment it is NOT IMPLEMENTED,
