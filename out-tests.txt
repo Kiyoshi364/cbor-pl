@@ -1,2 +1,33 @@
-236 tests passed.
-131 tests not well-behaved deterministic supreessed.
+cbor_tests:test_convert_float_sia_1d0_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_0d0_decode failed!
+cbor_tests:test_rfc8949_float_0d0_encode failed!
+cbor_tests:test_rfc8949_float_negative_0d0_decode failed!
+cbor_tests:test_rfc8949_float_negative_0d0_encode failed!
+cbor_tests:test_rfc8949_float_1d0_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_1d1_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_1d5_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_65504d0_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_100000d0_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_3d4028234663852886ep38_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_1d0ep300_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_5d960464477539063em8_decode throws exception error(instantiation_error,instantiation_error(unknown(from_to(n(0),sup)),1))
+cbor_tests:test_rfc8949_float_5d960464477539063em8_decode failed!
+cbor_tests:test_rfc8949_float_5d960464477539063em8_encode failed!
+cbor_tests:test_rfc8949_float_0d00006103515625_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_negative_4d0_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_negative_4d1_decode is not well-behaved deterministic!
+cbor_tests:test_rfc8949_float_negative_4d1_encode failed!
+cbor_tests:test_rfc8949_float_infinity_x4_decode failed!
+cbor_tests:test_rfc8949_float_infinity_x4_encode failed!
+cbor_tests:test_rfc8949_float_nan_x4_decode failed!
+cbor_tests:test_rfc8949_float_nan_x4_encode failed!
+cbor_tests:test_rfc8949_float_negative_infinity_x4_decode failed!
+cbor_tests:test_rfc8949_float_negative_infinity_x4_encode failed!
+cbor_tests:test_rfc8949_float_negative_infinity_x8_encode failed!
+cbor_tests:test_rfc8949_tag_1_1363896240d5_decode failed!
+cbor_tests:test_rfc8949_tag_1_1363896240d5_encode failed!
+
+16 tests failed!
+11 tests were not well-behaved deterministic!
+209 tests passed.
+122 tests not well-behaved deterministic supreessed.

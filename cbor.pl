@@ -44,7 +44,10 @@
 
   % Public DCGs
   cbor_item//1,
-  cbor_item//2
+  cbor_item//2,
+
+  % Public Helpers
+  sign_qxp_coef_float/4
 ]).
 
 /**
@@ -64,6 +67,7 @@
 :- use_module(library(dcgs), []).
 :- use_module(library(clpz), [
   (#<)/2, (#=)/2, (in)/2,
+  labeling/2,
   op(700, xfx, #<),
   op(700, xfx, #=),
   op(700, xfx, in),
@@ -75,6 +79,17 @@
 :- use_module(library(error), [must_be/2, instantiation_error/1, domain_error/3]).
 :- use_module(library(lists), [member/2, foldl/4, maplist/2, length/2]).
 :- use_module(library(reif), [if_/3, dif/3]).
+
+<(A, B, T) :-
+  ( number(A), number(B) ->
+    ( A < B  ->     T = true
+    ; B =< A ->     T = false
+    )
+  ; #A #< #B,     T = true
+  ; #B #< #A + 1, T = false
+  ).
+
+:- use_module(library(debug)).
 
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
@@ -250,9 +265,6 @@
 %
 % # Major 7 -- Floating Point Numbers
 %
-%  WARNING: `simple_value_float/3` is NOT IMPLEMENTED
-%    it currently unifies the second and third arguments.
-%
 %  It is represented by `float(P, X)`.
 %  `X` is the floating point number residing in place `P`.
 %  In this case, `P` may only be `x2`, `x4` or `x8`.
@@ -261,13 +273,13 @@
 %    * `x2` means half   precision float (float16) (2 bytes),
 %    * `x4` means single precision float (float32) (4 bytes),
 %    * `x8` means double precision float (float64) (8 bytes),
-%  `see(size_int_float/3)`.
+%  `see(size_int_afloat/3)`.
 %
 %  The following definition is similar to:
 %  ```prolog
-%    cbor(float(x2, X)) :- size_int_float(x2, _, X).
-%    cbor(float(x4, X)) :- size_int_float(x4, _, X).
-%    cbor(float(x8, X)) :- size_int_float(x8, _, X).
+%    cbor(float(x2, X)).
+%    cbor(float(x4, X)).
+%    cbor(float(x8, X)).
 %  ```
 %  but it puts emphasis on first argument indexing.
 % TODO: use reified version cbor_t
@@ -345,9 +357,9 @@ cbor_tag(P, T) :- place_value(P, T).
 cbor_simple(i , X) :- place_value(i , X).
 cbor_simple(x1, X) :- place_value(x1, X), X in 0x20..0xffff.
 
-cbor_float(x2, X) :- size_int_float(x2, _, X).
-cbor_float(x4, X) :- size_int_float(x4, _, X).
-cbor_float(x8, X) :- size_int_float(x8, _, X).
+cbor_float(x2, _).
+cbor_float(x4, _).
+cbor_float(x8, _).
 
 cbor_pair_(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
 
@@ -559,11 +571,12 @@ parse_option(Selector, OptList) :-
 %    an `Integer` of size `Size` and
 %    the `Float` represented by the `Integer`.
 %    The predicate is used as `call(SIF_3, Size, Integer, Float)`.
-%    `see(size_integer_float/3)` for more information.
+%    `see(size_int_afloat/3)` for more information.
 %
-%    The default value is `size_int_float`.
-%    At the moment it is NOT IMPLEMENTED,
-%    it behaves the same as `size_int_int`.
+%    The default value is `size_int_afloat`.
+%    It checks if `Size` is valid and relates
+%    `Integer` with its abstract float `Float`.
+%    `see(size_int_afloat)` for more information.
 %
 %    `size_int_int` checks
 %    if `Size` is valid and unifies `Integer` with `Float`.
@@ -592,7 +605,7 @@ option(on_nwf          , On_NWF, options(_ListOf, _BT_2, _SIF_3,  On_NWF)).
 %  Is true if `Option` is a default option for `cbor_item//2`.
 default_option(listOf(char)).
 default_option(bytes_text(utf8bytes_chars)).
-default_option(float_conversion(size_int_float)).
+default_option(float_conversion(size_int_afloat)).
 default_option(on_nwf(fail)).
 
 listOf(char).
@@ -603,7 +616,7 @@ utf8bytes_chars(Bytes, Text) :- chars_utf8bytes(Text, Bytes).
 % bytes_text(utf8bytes_chars).
 bytes_text(BT_2) :- callable(BT_2).
 
-% float_conversion(size_int_float).
+% float_conversion(size_int_afloat).
 % float_conversion(size_int_int).
 float_conversion(SIF_3) :- callable(SIF_3).
 
@@ -783,18 +796,144 @@ simple_or_float(x2, V, float(x2, X), Options) :- option(float_convertion, SIF_3,
 simple_or_float(x4, V, float(x4, X), Options) :- option(float_convertion, SIF_3, Options), call(SIF_3, x4, V, X).
 simple_or_float(x8, V, float(x8, X), Options) :- option(float_convertion, SIF_3, Options), call(SIF_3, x8, V, X).
 
-%% size_int_float(S, I, F). % doc(size_int_float/3).
+%% size_int_afloat(S, I, F). % doc(size_int_afloat/3).
 %
-%  WARNING: it is NOT IMPLEMENTED
-%    it currently unifies `I` and `F`.
-%
-%  Is true if the float `F` has
+%  Is true if the `F` is an abstract float
+%  representing `Float`, and `Float` has
 %  an byte representation `I` using size `S`.
+%
 %  `S` is one of:
-%    * `x2` (2 bytes)
-%    * `x4` (4 bytes)
-%    * `x8` (8 bytes)
-size_int_float(S, I, F) :- size_int_int(S, I, F). % TODO
+%    * `x2` (2 bytes -- half   precision float -- float16)
+%    * `x4` (4 bytes -- single precision float -- float32)
+%    * `x8` (8 bytes -- double precision float -- float64)
+%
+%  An abstract float of `Float` is one of:
+%  * `finite(Sign, Qxp, Coef)`
+%    `Sign` is either `0` or `1`.
+%    The following is true: `Float is (-1 ** Sign) * Coef * (2 ** Qxp)`
+%    Note that if `Float is 0.0`, `Qxp` may be any integer.
+%    One may want to use `sign_qxp_coef_float/4` to make
+%    such conversion.
+%
+%  * `special(Sign, Payload)`
+%    If `Payload is 0`, `Float` is either
+%    positive infinity or negative infinity.
+%    Otherwise, `Float` is a NaN (Not a Number).
+size_int_afloat(Size, I, F) :-
+  float_info(Size, ExpSize, Precision),
+  ExpShift is Precision,
+  SignShift is ExpSize + ExpShift,
+
+  SignMask is 1 << SignShift,
+  MantMask is (1 << Precision) - 1,
+
+  MaxBExp is (1 << ExpSize) - 1,
+  S in 0..1,
+  BExp in 0..MaxBExp,
+  Mant in 0..MantMask,
+
+  #S    #= #I >> SignShift,
+  #BExp #= (#I /\ (\ SignMask)) >> ExpShift,
+  #Mant #= (#I /\ MantMask),
+  #I #= (#S << SignShift) xor (#BExp << ExpShift) xor #Mant,
+
+  Emax is (1 << (ExpSize - 1)) - 1,
+  Emin is 1 - Emax,
+  Bias is Emax,
+
+  #BExp #= #Exp + Bias,
+
+  if_(Emax < Exp,
+    ( F = special(S, Mant) ),
+    ( F = finite(S, Q, C),
+      if_(Exp < Emin,
+        ( Subnormal = 1,
+          C0 in 0..MantMask,
+          #C0 #= #Mant
+        ),
+        ( Subnormal = 0,
+          C0min is (1 << Precision),
+          C0max is C0min + MantMask,
+          C0 in C0min..C0max,
+          #C0 #= C0min xor #Mant
+        )
+      ),
+
+      N in 0..sup,
+      #C #< #C0 + 1,
+      #C0 #= #C * (2 ^ #N),
+      1 #= mod(#C, 2),
+
+      #Q0 #= #Exp - Precision + Subnormal,
+      #Q #= #Q0 + #N,
+      /* NOTE: when `C0` is unknown (encoding),
+       * clpz cannot figure out `N` without `labeling/2`
+       **/
+      labeling([bisect, max(N)], [N])
+    )
+  ).
+
+float_info(x2,  5, 10).
+float_info(x4,  8, 23).
+float_info(x8, 11, 52).
+
+%% sign_qxp_coef_float(S, Q, C, F). % doc(sign_qxp_coef_float/4).
+%
+% Relates a finite abstract float `finite(S, Q, C)` with its value `F`.
+%
+% For the definition of an abstract float `see(size_int_afloat/3)`.
+sign_qxp_coef_float(S, Q, C, F) :-
+  ( nonvar(S), nonvar(Q), nonvar(C) -> sign_qxp_coef_to_float(S, Q, C, F)
+  ; nonvar(F) -> float_to_sign_qxp_coef(F, S, Q, C)
+  ; freeze(F, float_to_sign_qxp_coef(F, S, Q, C)),
+    freeze(Q, freeze(C, freeze(S, sign_qxp_coef_to_float(S, Q, C, F))))
+  ).
+
+% :- mode(sign_qxp_coef_to_float(+S, +Q, +C, -F)).
+sign_qxp_coef_to_float(S, Q, C, F) :- $F is (-1 ** S) * C * (2 ** Q).
+
+% :- mode(float_to_sign_qxp_coef(+F, -S, -Q, -C)).
+float_to_sign_qxp_coef(F, S, Q, C) :-
+  if_(F < 0, ( S = 1, F0 is -F ), ( S = 0, F0 = F )),
+  float_int_frac(F0, Int, Frac),
+  if_(Frac = 0.0,
+    ( int_coef_qxp(Int, C, Q) ),
+    ( frac_coef_prec(Frac, FCoef, FPrec),
+      C is Int * (2 ^ FPrec) + FCoef,
+      Q is -FPrec
+    )
+  ).
+
+% :- mode(float_to_sign_qxp_coef(+F, -S, -Q, -C)).
+float_int_frac(F, Int, Frac) :-
+  Int is floor(float_integer_part(F)),
+  Frac is float_fractional_part(F).
+
+% :- mode(int_coef_qxp(+Int, -C, -Q)).
+int_coef_qxp(Int, C, Q) :- int_coef_qxp_(Int, 0, C, Q).
+
+int_coef_qxp_(C0, Q0, C, Q) :-
+  M is mod(C0, 2),
+  if_(M = 0,
+    ( C1 is div(C0, 2),
+      Q1 is Q0 + 1,
+      int_coef_qxp_(C1, Q1, C, Q)
+    ),
+    ( C = C0, Q = Q0 )
+  ).
+
+% :- mode(frac_coef_prec(Frac, FCoef, FPrec)).
+frac_coef_prec(Frac, C, P) :- frac_coef_prec_(Frac, 0, 0, C, P).
+
+frac_coef_prec_(F0, C0, P0, C, P) :-
+  F1 is F0 * 2,
+  float_int_frac(F1, I, F),
+  C1 is C0 * 2 + I,
+  P1 is P0 + 1,
+  if_(F = 0.0,
+    ( C = C1, P = P1 ),
+    ( frac_coef_prec_(F, C1, P1, C, P) )
+  ).
 
 size_int_int(x2, I, I).
 size_int_int(x4, I, I).

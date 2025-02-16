@@ -304,19 +304,19 @@ test_custom_bytes_text :-
   cbor(X),
 true.
 
-test_convert_float_sif_1d0_decode :-
+test_convert_float_sia_1d0_decode :-
   % In = "\xf9\\x3c\\x00\",
   NULL = '\x00\',
   In = ['\xf9\', '\x3c\', NULL],
-  phrase(cbor_item(X, [float_convertion(size_int_float)]), In),
-  X == float(x2, 0x3c00),
+  phrase(cbor_item(X, [float_conversion(size_int_afloat)]), In),
+  X == float(x2, finite(0, 0, 1)),
   cbor(X),
 true.
 
 test_convert_float_sii_1d0_decode :-
   NULL = '\x00\',
   In = ['\xf9\', '\x3c\', NULL],
-  phrase(cbor_item(X, [float_convertion(size_int_int)]), In),
+  phrase(cbor_item(X, [float_conversion(size_int_int)]), In),
   X == float(x2, 0x3c00),
   cbor(X),
 true.
@@ -642,7 +642,7 @@ test_rfc8949_float_0d0_decode :-
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
   BIn = [0xf9, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0),
+  Out = float(x2, finite(0, 0, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -652,7 +652,7 @@ test_rfc8949_float_0d0_encode :-
   % headerlist_payload_input("\xf9\\x00\\x00\", "", In),
   BIn = [0xf9, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0),
+  Out = float(x2, finite(0, 0, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -661,7 +661,7 @@ test_rfc8949_float_negative_0d0_decode :-
   % headerlist_payload_input("\xf9\\x80\\x00\", "", In),
   BIn = [0xf9, 0x80, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x8000),
+  Out = float(x2, finite(1, 0, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -671,7 +671,7 @@ test_rfc8949_float_negative_0d0_encode :-
   % headerlist_payload_input("\xf9\\x80\\x00\", "", In),
   BIn = [0xf9, 0x80, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x8000),
+  Out = float(x2, finite(1, 0, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -680,7 +680,7 @@ test_rfc8949_float_1d0_decode :-
   % headerlist_payload_input("\xf9\\x3c\\x00\", "", In),
   BIn = [0xf9, 0x3c, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x3c00),
+  Out = float(x2, finite(0, 0, 1)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -690,20 +690,20 @@ test_rfc8949_float_1d0_encode :-
   % headerlist_payload_input("\xf9\\x3c\\x00\", "", In),
   BIn = [0xf9, 0x3c, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x3c00),
+  Out = float(x2, finite(0, 0, 1)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_float_1d1_decode :-
   headerlist_payload_input("\xfb\\x3f\\xf1\\x99\\x99\\x99\\x99\\x99\\x9a\", "", In),
-  Out = float(x8, 0x3ff199999999999a),
+  Out = float(x8, finite(0, -51, 0x8cccccccccccd)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_1d1_encode).
 test_rfc8949_float_1d1_encode :-
   headerlist_payload_input("\xfb\\x3f\\xf1\\x99\\x99\\x99\\x99\\x99\\x9a\", "", In),
-  Out = float(x8, 0x3ff199999999999a),
+  Out = float(x8, finite(0, -51, 0x8cccccccccccd)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -712,7 +712,7 @@ test_rfc8949_float_1d5_decode :-
   % headerlist_payload_input("\xf9\\x3e\\x00\", "", In),
   BIn = [0xf9, 0x3e, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x3e00),
+  Out = float(x2, finite(0, -1, 3)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -722,20 +722,20 @@ test_rfc8949_float_1d5_encode :-
   % headerlist_payload_input("\xf9\\x3e\\x00\", "", In),
   BIn = [0xf9, 0x3e, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x3e00),
+  Out = float(x2, finite(0, -1, 3)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_float_65504d0_decode :-
   headerlist_payload_input("\xf9\\x7b\\xff\", "", In),
-  Out = float(x2, 0x7bff),
+  Out = float(x2, finite(0, 5, 2047)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_65504d0_encode).
 test_rfc8949_float_65504d0_encode :-
   headerlist_payload_input("\xf9\\x7b\\xff\", "", In),
-  Out = float(x2, 0x7bff),
+  Out = float(x2, finite(0, 5, 2047)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -744,7 +744,7 @@ test_rfc8949_float_100000d0_decode :-
   % headerlist_payload_input("\xfa\\x47\\xc3\\x50\\x00\", "", In),
   BIn = [0xfa, 0x47, 0xc3, 0x50, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x47c35000),
+  Out = float(x4, finite(0, 5, 3125)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -754,20 +754,20 @@ test_rfc8949_float_100000d0_encode :-
   % headerlist_payload_input("\xfa\\x47\\xc3\\x50\\x00\", "", In),
   BIn = [0xfa, 0x47, 0xc3, 0x50, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x47c35000),
+  Out = float(x4, finite(0, 5, 3125)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_float_3d4028234663852886ep38_decode :-
   headerlist_payload_input("\xfa\\x7f\\x7f\\xff\\xff\", "", In),
-  Out = float(x4, 0x7f7fffff),
+  Out = float(x4, finite(0, 104, 0xffffff)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_3d4028234663852886ep38_encode).
 test_rfc8949_float_3d4028234663852886ep38_encode :-
   headerlist_payload_input("\xfa\\x7f\\x7f\\xff\\xff\", "", In),
-  Out = float(x4, 0x7f7fffff),
+  Out = float(x4, finite(0, 104, 0xffffff)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -776,7 +776,7 @@ test_rfc8949_float_1d0ep300_decode :-
   % headerlist_payload_input("\xfb\\x7e\\x37\\xe4\\x3c\\x88\\x00\\x75\\x9c\", "", In),
   BIn = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7e37e43c8800759c),
+  Out = float(x8, finite(0, 946, 0x5f90f22001d67)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -786,7 +786,7 @@ test_rfc8949_float_1d0ep300_encode :-
   % headerlist_payload_input("\xfb\\x7e\\x37\\xe4\\x3c\\x88\\x00\\x75\\x9c\", "", In),
   BIn = [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7e37e43c8800759c),
+  Out = float(x8, finite(0, 946, 0x5f90f22001d67)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -795,6 +795,7 @@ test_rfc8949_float_5d960464477539063em8_decode :-
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
   BIn = [0xf9, 0x00, 0x01],
   maplist(code_char, BIn, In),
+  % TODO
   Out = float(x2, 0x0001),
   meta_test_rfc8949_decode(In, Out),
 true.
@@ -805,6 +806,7 @@ test_rfc8949_float_5d960464477539063em8_encode :-
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
   BIn = [0xf9, 0x00, 0x01],
   maplist(code_char, BIn, In),
+  % TODO
   Out = float(x2, 0x0001),
   meta_test_rfc8949_encode(In, Out),
 true.
@@ -814,7 +816,7 @@ test_rfc8949_float_0d00006103515625_decode :-
   % headerlist_payload_input("\xf9\\x04\\x00\", "", In),
   BIn = [0xf9, 0x04, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x0400),
+  Out = float(x2, finite(0, -14, 1)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -824,7 +826,7 @@ test_rfc8949_float_0d00006103515625_encode :-
   % headerlist_payload_input("\xf9\\x04\\x00\", "", In),
   BIn = [0xf9, 0x04, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x0400),
+  Out = float(x2, finite(0, -14, 1)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -833,7 +835,7 @@ test_rfc8949_float_negative_4d0_decode :-
   % headerlist_payload_input("\xf9\\xc4\\x00\", "", In),
   BIn = [0xf9, 0xc4, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0xc400),
+  Out = float(x2, finite(1, 2, 1)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -843,20 +845,20 @@ test_rfc8949_float_negative_4d0_encode :-
   % headerlist_payload_input("\xf9\\xc4\\x00\", "", In),
   BIn = [0xf9, 0xc4, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0xc400),
+  Out = float(x2, finite(1, 2, 1)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_float_negative_4d1_decode :-
   headerlist_payload_input("\xfb\\xc0\\x10\\x66\\x66\\x66\\x66\\x66\\x66\", "", In),
-  Out = float(x8, 0xc010666666666666),
+  Out = float(x8, finite(1, -49, 0x8333333333333)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_negative_4d1_encode).
 test_rfc8949_float_negative_4d1_encode :-
   headerlist_payload_input("\xfb\\xc0\\x10\\x66\\x66\\x66\\x66\\x66\\x66\", "", In),
-  Out = float(x8, 0xc010666666666666),
+  Out = float(x8, finite(1, -49, 0x8333333333333)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -865,7 +867,7 @@ test_rfc8949_float_infinity_x2_decode :-
   % headerlist_payload_input("\0xf9\\x7c\\x00\", "", In),
   BIn = [0xf9, 0x7c, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x7c00),
+  Out = float(x2, special(0, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -875,7 +877,7 @@ test_rfc8949_float_infinity_x2_encode :-
   % headerlist_payload_input("\0xf9\\x7c\\x00\", "", In),
   BIn = [0xf9, 0x7c, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x7c00),
+  Out = float(x2, special(0, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -884,7 +886,7 @@ test_rfc8949_float_nan_x2_decode :-
   % headerlist_payload_input("\0xf9\\x7e\\x00\", "", In),
   BIn = [0xf9, 0x7e, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x7e00),
+  Out = float(x2, special(0, 0x0200)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -894,7 +896,7 @@ test_rfc8949_float_nan_x2_encode :-
   % headerlist_payload_input("\0xf9\\x7e\\x00\", "", In),
   BIn = [0xf9, 0x7e, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0x7e00),
+  Out = float(x2, special(0, 0x0200)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -903,7 +905,7 @@ test_rfc8949_float_negative_infinity_x2_decode :-
   % headerlist_payload_input("\0xf9\\xfc\\x00\", "", In),
   BIn = [0xf9, 0xfc, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0xfc00),
+  Out = float(x2, special(1, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -913,7 +915,7 @@ test_rfc8949_float_negative_infinity_x2_encode :-
   % headerlist_payload_input("\0xf9\\xfc\\x00\", "", In),
   BIn = [0xf9, 0xfc, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x2, 0xfc00),
+  Out = float(x2, special(1, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -922,7 +924,7 @@ test_rfc8949_float_infinity_x4_decode :-
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
   BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x7c800000),
+  Out = float(x4, special(0, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -932,7 +934,7 @@ test_rfc8949_float_infinity_x4_encode :-
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
   BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x7c800000),
+  Out = float(x4, special(0, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -941,7 +943,7 @@ test_rfc8949_float_nan_x4_decode :-
   % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
   BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x7e000000),
+  Out = float(x4, special(0, 0x700000)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -951,7 +953,7 @@ test_rfc8949_float_nan_x4_encode :-
   % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
   BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0x7e000000),
+  Out = float(x4, special(0, 0x700000)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -960,7 +962,7 @@ test_rfc8949_float_negative_infinity_x4_decode :-
   % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
   BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0xfc800000),
+  Out = float(x4, special(1, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -970,7 +972,7 @@ test_rfc8949_float_negative_infinity_x4_encode :-
   % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
   BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, 0xfc800000),
+  Out = float(x4, special(1, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -979,7 +981,7 @@ test_rfc8949_float_infinity_x8_decode :-
   % headerlist_payload_input("\0xfb\\x7f\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7ff0000000000000),
+  Out = float(x8, special(0, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -989,7 +991,7 @@ test_rfc8949_float_infinity_x8_encode :-
   % headerlist_payload_input("\0xfb\\x7f\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7ff0000000000000),
+  Out = float(x8, special(0, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -998,7 +1000,7 @@ test_rfc8949_float_nan_x8_decode :-
   % headerlist_payload_input("\0xfb\\x7f\\xf8\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7ff8000000000000),
+  Out = float(x8, special(0, 0x8000000000000)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -1008,7 +1010,7 @@ test_rfc8949_float_nan_x8_encode :-
   % headerlist_payload_input("\0xfb\\x7f\\xf8\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0x7ff8000000000000),
+  Out = float(x8, special(0, 0x8000000000000)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -1017,7 +1019,7 @@ test_rfc8949_float_negative_infinity_x8_decode :-
   % headerlist_payload_input("\0xfb\\xff\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0xfff0000000000000),
+  Out = float(x8, special(1, 0)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -1027,7 +1029,7 @@ test_rfc8949_float_negative_infinity_x8_encode :-
   % headerlist_payload_input("\0xfb\\xff\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\", "", In),
   BIn = [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x8, 0xfff0000000000000),
+  Out = float(x8, special(1, 0)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -1140,8 +1142,11 @@ test_rfc8949_tag_1_1363896240d5_decode :-
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
   maplist(code_char, BIn, In),
+  % TODO
   Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
-  meta_test_rfc8949_decode(In, Out),
+  % TODO: taking too long
+  % meta_test_rfc8949_decode(In, Out),
+  In == Out,
 true.
 
 nwdet(test_rfc8949_tag_1_1363896240d5_encode).
@@ -1150,6 +1155,7 @@ test_rfc8949_tag_1_1363896240d5_encode :-
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
   maplist(code_char, BIn, In),
+  % TODO
   Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
   meta_test_rfc8949_encode(In, Out),
 true.
