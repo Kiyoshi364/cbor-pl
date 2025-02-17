@@ -94,8 +94,6 @@
   ; #B #< #A + 1, T = false
   ).
 
-:- use_module(library(debug)).
-
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
 %
@@ -915,7 +913,7 @@ sign_qxp_coef_float(S, Q, C, F) :-
   ).
 
 % :- mode(sign_qxp_coef_to_float(+S, +Q, +C, -F)).
-sign_qxp_coef_to_float(S, Q, C, F) :- $F is (-1 ** S) * C * (2 ** Q).
+sign_qxp_coef_to_float(S, Q, C, F) :- F is (-1 ** S) * C * (2 ** Q).
 
 % :- mode(float_to_sign_qxp_coef(+F, -S, -Q, -C)).
 float_to_sign_qxp_coef(F, S, Q, C) :-
