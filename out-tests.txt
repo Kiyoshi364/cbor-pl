@@ -10,7 +10,6 @@ cbor_tests:test_rfc8949_float_65504d0_decode is not well-behaved deterministic!
 cbor_tests:test_rfc8949_float_100000d0_decode is not well-behaved deterministic!
 cbor_tests:test_rfc8949_float_3d4028234663852886ep38_decode is not well-behaved deterministic!
 cbor_tests:test_rfc8949_float_1d0ep300_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_5d960464477539063em8_decode throws exception error(instantiation_error,instantiation_error(unknown(from_to(n(0),sup)),1))
 cbor_tests:test_rfc8949_float_5d960464477539063em8_decode failed!
 cbor_tests:test_rfc8949_float_5d960464477539063em8_encode failed!
 cbor_tests:test_rfc8949_float_0d00006103515625_decode is not well-behaved deterministic!

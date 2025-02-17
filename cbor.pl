@@ -849,11 +849,11 @@ size_int_afloat(Size, I, F) :-
     ( F = special(S, Mant) ),
     ( F = finite(S, Q, C),
       if_(Exp < Emin,
-        ( Subnormal = 1,
+        ( % Subnormal
           C0 in 0..MantMask,
-          #C0 #= #Mant
+          #C0 #= #Mant * 2
         ),
-        ( Subnormal = 0,
+        ( % Normal
           C0min is (1 << Precision),
           C0max is C0min + MantMask,
           C0 in C0min..C0max,
@@ -866,7 +866,7 @@ size_int_afloat(Size, I, F) :-
       #C0 #= #C * (2 ^ #N),
       1 #= mod(#C, 2),
 
-      #Q0 #= #Exp - Precision + Subnormal,
+      #Q0 #= #Exp - Precision,
       #Q #= #Q0 + #N,
       /* NOTE: when `C0` is unknown (encoding),
        * clpz cannot figure out `N` without `labeling/2`
