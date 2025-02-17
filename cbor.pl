@@ -861,10 +861,13 @@ size_int_afloat(Size, I, F) :-
         )
       ),
 
-      N in 0..sup,
+      ZN is Precision - Emin + 1,
+      N in ZN\/0..sup,
       #C #< #C0 + 1,
       #C0 #= #C * (2 ^ #N),
-      1 #= mod(#C, 2),
+      ( 1 #= mod(#C, 2)
+      ; #C #= 0, #N #= ZN
+      ),
 
       #Q0 #= #Exp - Precision,
       #Q #= #Q0 + #N,
