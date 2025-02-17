@@ -15,8 +15,8 @@ example_cbor(5, map(_, [text(_, "key")-text(_, "value"), unsigned(_, 0)-negative
 example_cbor(6, tag(_, 0, unsigned(_, 10))).
 example_cbor(7, simple(_, 20)).
 % NOTE: currently floats are represented by their integer representation
-% 0x7e00 is a standard 2-byte NAN
-example_cbor(8, float(_, 0x7e00)).
+% 0x7e00 is a standard 2-byte NAN, and 0x0200 is the canonical payload
+example_cbor(8, float(_, special(0, 0x0200))).
 
 default_file("a.out").
 
