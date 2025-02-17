@@ -473,6 +473,20 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %       Bytes = [66,0,1], L = len(i,2), Chars = "B\x0\\x1\".
 %  ```
 %
+% # Decoding Features
+%
+%  A serialized CBOR Data Item has exactly one
+%  representation in prolog form.
+%  The predicate `cbor_item//1` considers this,
+%  and tries to leave no choice-point when it succeds
+%  from a decoding.
+%
+%  For that, the predicate `cbor_item//1` assumes
+%  the underlying implementation can index
+%  on the first argument (Scryer Prolog can!),
+%  and also needs for the CBOR Item not to have
+%  any indefinite Subitems or any not well-formatted.
+%
 % # Map Encoding/Decoding Behavior
 %
 %  Maps are translated as is to/from serialized form.

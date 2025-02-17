@@ -30,6 +30,7 @@ Features:
      N = 2, S = [66,0,1]
   ;  false.
   ```
+* For decoding a formated CBOR Item without indefinite Subitems, the predicates `cbor_item//[1,2]` are well-behaved deterministic (leave no choice-points)
 
 ## Dependencies
 
