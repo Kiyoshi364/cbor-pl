@@ -826,16 +826,15 @@ size_int_afloat(Size, I, F) :-
   ExpShift is Precision,
   SignShift is ExpSize + ExpShift,
 
-  SignMask is 1 << SignShift,
+  BExpMask is (1 << ExpSize) - 1,
   MantMask is (1 << Precision) - 1,
 
-  MaxBExp is (1 << ExpSize) - 1,
   S in 0..1,
-  BExp in 0..MaxBExp,
+  BExp in 0..BExpMask,
   Mant in 0..MantMask,
 
   #S    #= #I >> SignShift,
-  #BExp #= (#I /\ (\ SignMask)) >> ExpShift,
+  #BExp #= (#I >> ExpShift) /\ BExpMask,
   #Mant #= (#I /\ MantMask),
   #I #= (#S << SignShift) xor (#BExp << ExpShift) xor #Mant,
 
