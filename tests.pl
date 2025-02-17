@@ -2171,7 +2171,8 @@ run_test(Test, t(Np0, Nf0, Nd0, Nds0, Nt0), t(Np, Nf, Nd, Nds, Nt)) :-
   catch(
     ( call_cleanup(Test, Result = pass) ; Result = failed ),
     Err,
-    ( Result = failed,
+    ( Err = error('$interrupt_thrown', repl/0) -> throw(Err)
+    ; Result = failed,
       write(Test), write(' throws exception '), write(Err), nl
     )
   ),
