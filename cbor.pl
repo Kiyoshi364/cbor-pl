@@ -520,6 +520,7 @@ cbor_item_(Options, X, B) -->
   cbor_major_value(Major, Value, Options),
   cbor_major_value_x(Major, Value, X, Options, B).
 
+% TODO: Add checks for extra/invalid options
 parse_options(OptList, Options) :-
   must_be(list, OptList),
   Options = options(ListOf, BT_2, SIF_3, On_NWF),
