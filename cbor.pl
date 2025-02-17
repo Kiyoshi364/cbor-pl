@@ -852,7 +852,7 @@ size_int_afloat(Size, I, F) :-
   #S    #= #I >> SignShift,
   #BExp #= (#I >> ExpShift) /\ BExpMask,
   #Mant #= (#I /\ MantMask),
-  #I #= (#S << SignShift) xor (#BExp << ExpShift) xor #Mant,
+  #I #= (#S * (2 ^ SignShift)) xor (#BExp << ExpShift) xor #Mant,
 
   Emax is (1 << (ExpSize - 1)) - 1,
   Emin is 1 - Emax,

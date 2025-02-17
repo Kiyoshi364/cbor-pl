@@ -1,7 +1,5 @@
-cbor_tests:test_rfc8949_float_negative_4d1_encode failed!
-cbor_tests:test_rfc8949_float_negative_infinity_x8_encode failed!
 cbor_tests:test_rfc8949_tag_1_1363896240d5_decode failed!
 
-3 tests failed!
-233 tests passed.
-129 tests not well-behaved deterministic supreessed.
+1 tests failed!
+235 tests passed.
+131 tests not well-behaved deterministic supreessed.
