@@ -795,8 +795,7 @@ test_rfc8949_float_5d960464477539063em8_decode :-
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
   BIn = [0xf9, 0x00, 0x01],
   maplist(code_char, BIn, In),
-  % TODO
-  Out = float(x2, 0x0001),
+  Out = float(x2, finite(0, -24, 1)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
@@ -806,8 +805,7 @@ test_rfc8949_float_5d960464477539063em8_encode :-
   % headerlist_payload_input("\xf9\\x00\\x01\", "", In),
   BIn = [0xf9, 0x00, 0x01],
   maplist(code_char, BIn, In),
-  % TODO
-  Out = float(x2, 0x0001),
+  Out = float(x2, finite(0, -24, 1)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
@@ -922,7 +920,7 @@ true.
 test_rfc8949_float_infinity_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
-  BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0x7f, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x4, special(0, 0)),
   meta_test_rfc8949_decode(In, Out),
@@ -932,7 +930,7 @@ nwdet(test_rfc8949_float_infinity_x4_encode).
 test_rfc8949_float_infinity_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
   % headerlist_payload_input("\0xfa\\x7f\\x80\\x00\\x00\", "", In),
-  BIn = [0xfa, 0x7c, 0x80, 0x00, 0x00],
+  BIn = [0xfa, 0x7f, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x4, special(0, 0)),
   meta_test_rfc8949_encode(In, Out),
@@ -940,27 +938,27 @@ true.
 
 test_rfc8949_float_nan_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
-  BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  % headerlist_payload_input("\0xfa\\x7f\\xc0\\x00\\x00\", "", In),
+  BIn = [0xfa, 0x7f, 0xc0, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, special(0, 0x700000)),
+  Out = float(x4, special(0, 0x400000)),
   meta_test_rfc8949_decode(In, Out),
 true.
 
 nwdet(test_rfc8949_float_nan_x4_encode).
 test_rfc8949_float_nan_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\0xfa\\x7e\\x00\\x00\\x00\", "", In),
-  BIn = [0xfa, 0x7e, 0x00, 0x00, 0x00],
+  % headerlist_payload_input("\0xfa\\x7f\\xc0\\x00\\x00\", "", In),
+  BIn = [0xfa, 0x7f, 0xc0, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  Out = float(x4, special(0, 0x700000)),
+  Out = float(x4, special(0, 0x400000)),
   meta_test_rfc8949_encode(In, Out),
 true.
 
 test_rfc8949_float_negative_infinity_x4_decode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
-  BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  % headerlist_payload_input("\0xfa\\xff\\x80\\x00\\x00\", "", In),
+  BIn = [0xfa, 0xff, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x4, special(1, 0)),
   meta_test_rfc8949_decode(In, Out),
@@ -969,8 +967,8 @@ true.
 nwdet(test_rfc8949_float_negative_infinity_x4_encode).
 test_rfc8949_float_negative_infinity_x4_encode :-
   % Cannot use headerlist_payload_input/3, because there is a zero byte.
-  % headerlist_payload_input("\0xfa\\xfc\\x80\\x00\\x00\", "", In),
-  BIn = [0xfa, 0xfc, 0x80, 0x00, 0x00],
+  % headerlist_payload_input("\0xfa\\xff\\x80\\x00\\x00\", "", In),
+  BIn = [0xfa, 0xff, 0x80, 0x00, 0x00],
   maplist(code_char, BIn, In),
   Out = float(x4, special(1, 0)),
   meta_test_rfc8949_encode(In, Out),
@@ -1142,8 +1140,7 @@ test_rfc8949_tag_1_1363896240d5_decode :-
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  % TODO
-  Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
+  Out = tag(i, 1, float(x8, finite(0, -1, 0xa296cf61))),
   % TODO: taking too long
   % meta_test_rfc8949_decode(In, Out),
   In == Out,
@@ -1155,8 +1152,7 @@ test_rfc8949_tag_1_1363896240d5_encode :-
   % headerlist_payload_input("\xc1\\xfb\\x41\\xd4\\x52\\xd9\\xec\\x20\\x00\\x00\", "", In),
   BIn = [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00],
   maplist(code_char, BIn, In),
-  % TODO
-  Out = tag(i, 1, float(x8, 0x41d452d9ec200000)),
+  Out = tag(i, 1, float(x8, finite(0, -1, 0xa296cf61))),
   meta_test_rfc8949_encode(In, Out),
 true.
 
