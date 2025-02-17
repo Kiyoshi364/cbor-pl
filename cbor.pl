@@ -1,6 +1,6 @@
 /** cbor.pl
 
-  WARNING: This library is unfinished
+  WARNING: This library is unfinished, expect bugs.
 
   A prolog library for reasoning about CBOR.
   The library provides a way of lifting one out of raw bytes
