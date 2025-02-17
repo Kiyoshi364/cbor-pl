@@ -13,6 +13,9 @@
   This library is tested for [Scryer Prolog](https://scryer.pl)
   version 8ac663d (after v0.9.4).
 
+  This library was made with
+  [Scryer Prolog](https://scryer.pl) in mind.
+
   LICENSE
 
     See end of file for license information.

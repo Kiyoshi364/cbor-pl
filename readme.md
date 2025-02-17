@@ -9,8 +9,13 @@ without losing any possible representation for CBOR Values.
 Possibly a good foundation for building
 a higher-level CBOR encoder/decoder.
 
-This library was made
-with [Scryer Prolog](https://github.com/mthom/scryer-prolog) in mind.
+Consider reading documentation for `cbor/1` before
+using the main predicate `cbor_item//1`.
+This library is tested for [Scryer Prolog](https://scryer.pl)
+version 8ac663d (after v0.9.4).
+
+This library was made with
+[Scryer Prolog](https://scryer.pl) in mind.
 
 Features:
 
