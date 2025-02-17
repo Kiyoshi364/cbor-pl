@@ -21,9 +21,9 @@ example_cbor(8, float(_, special(0, 0x0200))).
 
 default_file("a.out").
 
-main_write :- main_write(0).
-main_write(Ex) :- default_file(File), main_write(Ex, File).
-main_write(Ex, File) :-
+impure_write :- main_write(0).
+impure_write(Ex) :- default_file(File), main_write(Ex, File).
+impure_write(Ex, File) :-
   example_cbor(Ex, Cbor),
   format("~w~n", [Cbor]),
   phrase(cbor_item(Cbor, [listOf(byte)]), Out),
@@ -34,8 +34,8 @@ main_write(Ex, File) :-
   ),
   format("Output written to `~s'~n", [File]).
 
-main_read :- default_file(File), main_read(File).
-main_read(File) :-
+impure_read :- default_file(File), main_read(File).
+impure_read(File) :-
   setup_call_cleanup(
     open(File, read, Stream, [type(binary)]),
     ( read_entire_file(Stream, In),
