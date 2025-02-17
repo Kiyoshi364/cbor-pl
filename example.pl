@@ -25,6 +25,7 @@ main_write :- main_write(0).
 main_write(Ex) :- default_file(File), main_write(Ex, File).
 main_write(Ex, File) :-
   example_cbor(Ex, Cbor),
+  format("~w~n", [Cbor]),
   phrase(cbor_item(Cbor, [listOf(byte)]), Out),
   setup_call_cleanup(
     open(File, write, Stream, [type(binary)]),
@@ -56,6 +57,7 @@ pure_write :- pure_write(0).
 pure_write(Ex) :- default_file(File), pure_write(Ex, File).
 pure_write(Ex, File) :-
   example_cbor(Ex, Cbor),
+  format("~w~n", [Cbor]),
   phrase_to_file(cbor_item(Cbor), File, [type(binary)]),
   format("Output written to `~s'~n", [File]).
 
