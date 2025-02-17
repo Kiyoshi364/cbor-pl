@@ -1,9 +1,9 @@
-:- use_module(cbor, [ cbor_item//1 ]).
+:- use_module(cbor, [ cbor_item//1, cbor_item//2 ]).
 
 :- use_module(library(dcgs), [phrase/2]).
 :- use_module(library(iso_ext), [setup_call_cleanup/3]).
 :- use_module(library(lists), [maplist/2]).
-:- use_module(library(pio), [phrase_from_file/2, phrase_to_file/2]).
+:- use_module(library(pio), [phrase_from_file/3, phrase_to_file/3]).
 :- use_module(library(format), [format/2]).
 
 example_cbor(0, unsigned(_, 10)).
@@ -25,33 +25,30 @@ main_write :- main_write(0).
 main_write(Ex) :- default_file(File), main_write(Ex, File).
 main_write(Ex, File) :-
   example_cbor(Ex, Cbor),
-  phrase(cbor_item(Cbor), Out),
+  phrase(cbor_item(Cbor, [listOf(byte)]), Out),
   setup_call_cleanup(
-    open(File, write, Stream),
-    ( maplist(put_char(Stream), Out),
-      format("Output written to `~s'~n", [File])
-    ),
+    open(File, write, Stream, [type(binary)]),
+    maplist(put_byte(Stream), Out),
     close(Stream)
   ),
-  halt(0).
+  format("Output written to `~s'~n", [File]).
 
 main_read :- default_file(File), main_read(File).
 main_read(File) :-
   setup_call_cleanup(
-    open(File, read, Stream),
+    open(File, read, Stream, [type(binary)]),
     ( read_entire_file(Stream, In),
       format("Input read from `~s'~n", [File])
     ),
     close(Stream)
   ),
-  phrase(cbor_item(Cbor), In),
-  format("~w~n", [Cbor]),
-  halt(0).
+  phrase(cbor_item(Cbor, [listOf(byte)]), In),
+  format("~w~n", [Cbor]).
 
 read_entire_file(Stream, Read) :-
   ( at_end_of_stream(Stream) -> Read = []
-  ; get_char(Stream, C),
-    Read = [C | Read1],
+  ; get_byte(Stream, B),
+    Read = [B | Read1],
     read_entire_file(Stream, Read1)
   ).
 
@@ -59,13 +56,11 @@ pure_write :- pure_write(0).
 pure_write(Ex) :- default_file(File), pure_write(Ex, File).
 pure_write(Ex, File) :-
   example_cbor(Ex, Cbor),
-  phrase_to_file(cbor_item(Cbor), File),
-  format("Output written to `~s'~n", [File]),
-  halt(0).
+  phrase_to_file(cbor_item(Cbor), File, [type(binary)]),
+  format("Output written to `~s'~n", [File]).
 
 pure_read :- default_file(File), pure_read(File).
 pure_read(File) :-
-  phrase_from_file(cbor_item(Cbor), File),
+  phrase_from_file(cbor_item(Cbor), File, [type(binary)]),
   format("Input read from `~s'~n", [File]),
-  format("~w~n", [Cbor]),
-  halt(0).
+  format("~w~n", [Cbor]).
