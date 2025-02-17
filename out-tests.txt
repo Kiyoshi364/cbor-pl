@@ -1,22 +1,7 @@
-cbor_tests:test_convert_float_sia_1d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_0d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_negative_0d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_1d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_1d1_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_1d5_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_65504d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_100000d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_3d4028234663852886ep38_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_1d0ep300_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_5d960464477539063em8_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_0d00006103515625_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_negative_4d0_decode is not well-behaved deterministic!
-cbor_tests:test_rfc8949_float_negative_4d1_decode is not well-behaved deterministic!
 cbor_tests:test_rfc8949_float_negative_4d1_encode failed!
 cbor_tests:test_rfc8949_float_negative_infinity_x8_encode failed!
 cbor_tests:test_rfc8949_tag_1_1363896240d5_decode failed!
 
 3 tests failed!
-14 tests were not well-behaved deterministic!
-219 tests passed.
+233 tests passed.
 129 tests not well-behaved deterministic supreessed.

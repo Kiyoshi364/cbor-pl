@@ -864,16 +864,19 @@ size_int_afloat(Size, I, F) :-
       N in ZN\/0..sup,
       #C #< #C0 + 1,
       #C0 #= #C * (2 ^ #N),
-      ( 1 #= mod(#C, 2)
+      ( integer(C0) ->
+        ( C0 =:= 0 -> C = 0, N = ZN ; 1 #= mod(C, 2) )
+      ; 1 #= mod(#C, 2)
       ; #C #= 0, #N #= ZN
       ),
 
       #Q0 #= #Exp - Precision,
       #Q #= #Q0 + #N,
+
       /* NOTE: when `C0` is unknown (encoding),
        * clpz cannot figure out `N` without `labeling/2`
        **/
-      labeling([bisect, max(N)], [N])
+      ( labeling([bisect, max(N)], [N]) -> true )
     )
   ).
 
