@@ -265,6 +265,24 @@ true.
 
 % TODO: add tests for floats
 
+test_option_domainerror_invalid_option :-
+  O = list(byte),
+  OptList = [O],
+  Err = error(domain_error(invalid_option, O), OptList),
+  catch(phrase(cbor_item(_, OptList), _, _), Err, true).
+
+test_option_domainerror_invalid_option_argument :-
+  O = listOf(bytes),
+  OptList = [O],
+  Err = error(domain_error(invalid_option_argument, O), OptList),
+  catch(phrase(cbor_item(_, OptList), _, _), Err, true).
+
+test_option_domainerror_nonrepeating_options :-
+  O = listOf(byte),
+  OptList = [listOf(char), O],
+  Err = error(domain_error(nonrepeating_options, O), OptList),
+  catch(phrase(cbor_item(_, OptList), _, _), Err, true).
+
 test_byte_decode_array :-
   Items = [unsigned(i, 10), unsigned(x2, 500), negative(i, -10), negative(x2, -500)],
   Len = 4,

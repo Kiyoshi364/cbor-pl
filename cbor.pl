@@ -535,24 +535,40 @@ cbor_item_(Options, X, B) -->
   cbor_major_value(Major, Value, Options),
   cbor_major_value_x(Major, Value, X, Options, B).
 
-% TODO: Add checks for extra/invalid options
 parse_options(OptList, Options) :-
   must_be(list, OptList),
-  Options = options(ListOf, BT_2, SIF_3, On_NWF),
-  ( member(Opt, OptList), var(Opt) -> instantiation_error(cbor_item//2)
-  ; parse_option(listOf(ListOf), OptList),
-    parse_option(bytes_text(BT_2), OptList),
-    parse_option(float_conversion(SIF_3), OptList),
-    parse_option(on_nwf(On_NWF), OptList)
+  parse_options_(OptList, OptList, def, def, def, def, Options).
+
+parse_options_([], _, ListOf0, BT_20, SIF_30, On_NWF0, Options) :-
+  finish_parse_option(ListOf0, listOf          , ListOf),
+  finish_parse_option(BT_20  , bytes_text      , BT_2  ),
+  finish_parse_option(SIF_30 , float_conversion, SIF_3 ),
+  finish_parse_option(On_NWF0, on_nwf          , On_NWF),
+  Options = options(ListOf, BT_2, SIF_3, On_NWF).
+parse_options_([O|Os], OptList, ListOf, BT_2, SIF_3, On_NWF, Options) :-
+  ( var(O) -> instantiation_error(unknown(cbor_item//2)-2)
+  ; parse_option(listOf(ListOf_), O, ListOf, OptList) ->
+    parse_options_(Os, OptList, user(ListOf_), BT_2, SIF_3, On_NWF, Options)
+  ; parse_option(bytes_text(BT_2_), O, BT_2, OptList) ->
+    parse_options_(Os, OptList, ListOf, user(BT_2_), SIF_3, On_NWF, Options)
+  ; parse_option(float_conversion(SIF_3_), O, SIF_3, OptList) ->
+    parse_options_(Os, OptList, ListOf, BT_2, user(SIF_3_), On_NWF, Options)
+  ; parse_option(on_nwf(On_NWF_), O, On_NWF, OptList) ->
+    parse_options_(Os, OptList, ListOf, BT_2, SIF_3, user(On_NWF_), Options)
+  ; domain_error(invalid_option, O, OptList)
   ).
 
-parse_option(Selector, OptList) :-
-  ( member(Selector, OptList) ->
-    ( call(Selector) -> true
-    ; domain_error(invalid_option, Selector, OptList)
-    )
-  ; default_option(Selector)
+parse_option(Selector, Selector, Prev, OptList) :-
+  ( call(Selector) -> parse_option_(Prev, Selector, OptList)
+  ; domain_error(invalid_option_argument, Selector, OptList)
   ).
+
+parse_option_(def, _, _).
+parse_option_(user(_), O, OptList) :-
+  domain_error(nonrepeating_options, O, OptList).
+
+finish_parse_option(def, Selector, Option) :- default_option(Selector, Option).
+finish_parse_option(user(Option), _, Option).
 
 %% option(+Key, ?Value, ?Options) is semidet. % doc(option/3).
 %% option(?Key, ?Value, ?Options) is nondet.
@@ -624,10 +640,10 @@ option(on_nwf          , On_NWF, options(_ListOf, _BT_2, _SIF_3,  On_NWF)).
 %% default_option(?Option) is nondet.
 %
 %  Is true if `Option` is a default option for `cbor_item//2`.
-default_option(listOf(char)).
-default_option(bytes_text(utf8bytes_chars)).
-default_option(float_conversion(size_int_afloat)).
-default_option(on_nwf(fail)).
+default_option(listOf, char).
+default_option(bytes_text, utf8bytes_chars).
+default_option(float_conversion, size_int_afloat).
+default_option(on_nwf, fail).
 
 listOf(char).
 listOf(byte).
