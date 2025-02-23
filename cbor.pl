@@ -27,10 +27,11 @@
 
   CHANGELOG
 
-    2025-02-18 v0.1  Add afloat abstraction,
-                     modify default float handling
-                     `see(size_int_afloat/3)`
-    2025-02-12 v0.0  First Released Version
+    2025-02-23 v0.1.1    Add checking for invalid options
+    2025-02-18 v0.1      Add afloat abstraction,
+                         modify default float handling
+                         `see(size_int_afloat/3)`
+    2025-02-12 v0.0      First Released Version
 */
 :- module(cbor, [
   % Documentation predicates
