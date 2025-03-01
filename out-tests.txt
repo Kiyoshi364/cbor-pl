@@ -1,5 +1,5 @@
 cbor_tests:test_rfc8949_tag_1_1363896240d5_decode failed!
 
 1 tests failed!
-235 tests passed.
+238 tests passed.
 131 tests not well-behaved deterministic supreessed.

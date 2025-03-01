@@ -34,29 +34,46 @@
     2025-02-12 v0.0      First Released Version
 */
 :- module(cbor, [
-  % Documentation predicates
-  cbor/1,
-  cbor_bytes/2,
-  definite_bytes/1,
-  cbor_text/2,
-  definite_text/1,
-  cbor_array/2,
-  cbor_map/2,
-  pair_of_cbor/1,
-  cbor_tag/2,
-  cbor_simple/2,
-  cbor_float/2,
-  place_value/2,
-  lengthindicator_length/2,
-
-  nwf_cbor/1,
-
   % Public DCGs
   cbor_item//1,
   cbor_item//2,
 
   % Public Helpers
-  sign_qxp_coef_float/4
+  sign_qxp_coef_float/4,
+
+  % Documentation predicates (High Level)
+  cbor/1,
+  cbor/2,
+
+  nwf_cbor/2,
+  cbor_t/2,
+  cbor_t/3,
+
+  % Documentation predicates (Low Level)
+  place_value/2,
+  lengthindicator_length/2,
+
+  cbor_unsigned_t/4,
+  cbor_negative_t/4,
+  cbor_bytes_t/4,
+  definite_bytes_t/2,
+  definite_bytes_t/3,
+  cbor_text_t/4,
+  definite_text_t/2,
+  definite_text_t/3,
+  cbor_array_t/4,
+  cbor_map_t/4,
+  pair_of_cbor_t/3,
+  cbor_tag_t/5,
+  cbor_simple_t/4,
+  cbor_float_t/4,
+  cbor_nwf_t/3,
+
+  % Documentation and Helpers for Options
+  default_options/1,
+  parse_options/2,
+  default_option/2,
+  option/3
 ]).
 
 /**
@@ -87,7 +104,7 @@
 :- use_module(library(freeze), [freeze/2]).
 :- use_module(library(error), [must_be/2, instantiation_error/1, domain_error/3]).
 :- use_module(library(lists), [member/2, foldl/4, maplist/2, length/2]).
-:- use_module(library(reif), [if_/3, dif/3]).
+:- use_module(library(reif), [if_/3, (=)/3, dif/3, (',')/3]).
 
 <(A, B, T) :-
   ( number(A), number(B) ->
@@ -98,15 +115,27 @@
   ; #B #< #A + 1, T = false
   ).
 
+reif_andlist(P_2, L, T) :-
+  foldl(pred_x_ontrue_result(P_2), L, true, T).
+
+pred_x_ontrue_result(P_2, X, T0, T) :-
+  if_(call(P_2, X),
+    T = T0,
+    T = false
+  ).
+
 %% cbor(+Item) is semidet. % doc(cbor/1).
 %% cbor(?Item) is nondet.
 %
 %  Is true if `cbor_item(Item)` describes
-%  a well-formed CBOR serialized into a list of chars.
+%  a well-formed CBOR serialized into a list of byte-like elements.
 %  In more pratical terms,
 %  if `cbor(Item)` then `phrase(cbor_item(Item), S)` is true
 %  and `S` is a list of byte-like elements which
 %  is a serialized well-formed CBOR and encodes `Item`.
+%
+%  `see(nwf_cbor/2)`, for only not well-formed CBOR.
+%  `see(cbor_t/3)`, for both not well-formed and well-formed CBOR.
 %
 %  Each clause maps a functor of a CBOR Item
 %  to one Major Type from CBOR specification.
@@ -127,7 +156,7 @@
 %      Note that `cbor_item//1` also describes not well-formed CBOR Items,
 %      in order to support reading partial information from
 %      a not well-formed CBOR,
-%      for more information `see(cbor_item//1)`.
+%      for more information `see(nwf_cbor/2)`.
 %
 %  The prolog representation used in this library for a CBOR Item
 %  maps one-to-one to a serialized form of a certain CBOR Item.
@@ -163,7 +192,18 @@
 %  In the second case `*`, the length is indefinite.
 %  `see(lengthindicator_length/2)` for more info.
 %
-% # Major 0 -- Unsigned
+%  Next, we explain each Major Type's representation
+%  and provide prolog code for checking it.
+%  The code provided is not the real implementation,
+%  but it could be.
+%  The implementation does not use the code presented
+%  in this exact way to take advantage of
+%  first-argument indexing and
+%  reified predicates to reason about
+%  supported not well-formed CBOR Items.
+%  `see(nwf_cbor/2)`
+%
+%  # Major 0 -- Unsigned
 %
 %  It is represented by `unsigned(P, X)`,
 %  `X` is the unsigned number itself and
@@ -173,7 +213,7 @@
 %    cbor(unsigned(P, X)) :- place_value(P, X).
 %  ```
 %
-% # Major 1 -- Negative
+%  # Major 1 -- Negative
 %
 %  It is represented by `negative(P, X)`,
 %  `X` is the negative number itself and
@@ -188,7 +228,7 @@
 %      place_value(P, V).
 %  ```
 %
-% # Major 2 -- Byte String
+%  # Major 2 -- Byte String
 %
 %  It is represented by `bytes(L, X)`.
 %  `L` is a length indicator.
@@ -197,16 +237,14 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 2 (byte string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  `see(definite_bytes/1)`.
+%  `see(definite_bytes_t/2)`.
 %
-%  The following definition is similar to:
 %  ```prolog
 %    cbor(bytes(len(P, N), X)) :- definite_bytes(bytes(len(P, N), X)).
 %    cbor(bytes(*, X)) :- maplist(definite_bytes, X).
 %  ```
-%  but it puts emphasis on first argument indexing.
 %
-% # Major 3 -- Text String (UTF-8 encoded)
+%  # Major 3 -- Text String (UTF-8 encoded)
 %
 %  It is represented by `text(L, X)`.
 %  `L` is a length indicator.
@@ -216,7 +254,7 @@
 %  Otherwise, `L = *` and
 %  `X` is a list of Major 3 (text string) items,
 %  and each item has definite length (`L = len(P, N)`).
-%  `see(definite_text/1)`.
+%  `see(definite_text_t/2)`.
 %
 %  The following definition is similar to:
 %  ```prolog
@@ -225,7 +263,7 @@
 %  ```
 %  but it puts emphasis on first argument indexing.
 %
-% # Major 4 -- Array
+%  # Major 4 -- Array
 %
 %  It is represented by `array(L, X)`.
 %  `L` is a length indicator and
@@ -235,7 +273,7 @@
 %    cbor(array(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
 %  ```
 %
-% # Major 5 -- Map
+%  # Major 5 -- Map
 %
 %  It is represented by `map(L, X)`.
 %  `L` is a length indicator and
@@ -247,7 +285,7 @@
 %    cbor(map(L, X)) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
 %  ```
 %
-% # Major 6 -- Tagged Item
+%  # Major 6 -- Tagged Item
 %
 %  It is represented by `tag(P, T, X)`.
 %  `T` is the tag residing in place `P` and
@@ -257,7 +295,7 @@
 %    cbor(tag(P, T, X)) :- place_value(P, T), cbor(X).
 %  ```
 %
-% # Major 7 -- Simple Values
+%  # Major 7 -- Simple Values
 %
 %  It is represented by `simple(P, X)`.
 %  `X` is the simple value residing in place `P`.
@@ -270,7 +308,7 @@
 %  ```
 %  but it puts emphasis on first argument indexing.
 %
-% # Major 7 -- Floating Point Numbers
+%  # Major 7 -- Floating Point Numbers
 %
 %  It is represented by `float(P, X)`.
 %  `X` is the floating point number residing in place `P`.
@@ -289,16 +327,29 @@
 %    cbor(float(x8, X)).
 %  ```
 %  but it puts emphasis on first argument indexing.
-% TODO: use reified version cbor_t
-cbor(unsigned(P, X)) :- cbor_unsigned(P, X).
-cbor(negative(P, X)) :- cbor_negative(P, X).
-cbor(bytes(L, X)) :- cbor_bytes(L, X).
-cbor(text(L, X)) :- cbor_text(L, X).
-cbor(array(L, X)) :- cbor_array(L, X).
-cbor(map(L, X)) :- cbor_map(L, X).
-cbor(tag(P, T, X)) :- cbor_tag(P, T), cbor(X).
-cbor(simple(P, X)) :- cbor_simple(P, X).
-cbor(float(P, X)) :- cbor_float(P, X).
+cbor(X) :- cbor(X, []).
+
+cbor(X, OptList) :- parse_options(OptList, Options), cbor_t(X, Options, true).
+
+%% nwf_cbor(NWF, OptList). % doc(nwf_cbor/2).
+%
+% TODO
+nwf_cbor(X, OptList) :- parse_options(OptList, Options), cbor_t(X, Options, false).
+
+cbor_t(X, T) :- default_options(Options), cbor_t(X, Options, T).
+
+cbor_t(unsigned(P, X), Options, T) :- cbor_unsigned_t(P, X, Options, T).
+cbor_t(negative(P, X), Options, T) :- cbor_negative_t(P, X, Options, T).
+cbor_t(bytes(L, X)   , Options, T) :- cbor_bytes_t(L, X, Options, T).
+cbor_t(text(L, X)    , Options, T) :- cbor_text_t(L, X, Options, T).
+cbor_t(array(L, X)   , Options, T) :- cbor_array_t(L, X, Options, T).
+cbor_t(map(L, X)     , Options, T) :- cbor_map_t(L, X, Options, T).
+cbor_t(tag(P, T, X)  , Options,T_) :- cbor_tag_t(P, T, X, Options, T_).
+cbor_t(simple(P, X)  , Options, T) :- cbor_simple_t(P, X, Options, T).
+cbor_t(float(P, X)   , Options, T) :- cbor_float_t(P, X, Options, T).
+cbor_t(nwf(X)        , Options, T) :- cbor_nwf_t(X, Options, T).
+
+cbor_t_(Options, X, T) :- cbor_t(X, Options, T).
 
 %% place_value(+P, ?V) is semidet. % doc(place_value/2).
 %% place_value(?P, +V) is nondet.
@@ -326,47 +377,94 @@ place_value(x8, V) :- quad(V).
 lengthindicator_length(len(P, N), N) :- place_value(P, N).
 lengthindicator_length(*, N) :- byte(N).
 
-cbor_unsigned(P, X) :- place_value(P, X).
-cbor_negative(P, X) :- #X #< 0, #X + #V #= -1, place_value(P, V).
+cbor_unsigned_t(P, X, _, true) :- place_value(P, X).
+cbor_negative_t(P, X, _, true) :- #X #< 0, #X + #V #= -1, place_value(P, V).
 
-%% definite_bytes(+Bytes) is semidet. % doc(definite_bytes/1).
-%% definite_bytes(?Bytes) is nondet.
+% TODO
+%% definite_bytes_t(+Bytes, T) is semidet. % doc(definite_bytes_t/2).
+%% definite_bytes_t(?Bytes, T) is nondet.
 %
 %  `Bytes` is `bytes(len(P, N), X)`,
 %  `X` is a list of bytes with length `N`,
 %  `N` is residing at place `P`,
 %  also `place_value(P, N)` must be true.
-definite_bytes(bytes(len(P, N), X)) :- place_value(P, N), length(X, N), maplist(byte, X).
+definite_bytes_t(X, T) :- default_options(Options), definite_bytes_t(X, Options, T).
 
-cbor_bytes(len(P, N), X) :- place_value(P, N), length(X, N), maplist(byte, X).
-cbor_bytes(*, X) :- maplist(definite_bytes, X).
+definite_bytes_t(X, Options, T) :-
+  cbor_t(X, Options, _),
+  if_(X = bytes(L, Bs),
+    cbor_bytes_t(L, Bs, Options, T),
+    ( T = false, options_nwf(Options, _, _) )
+  ).
 
-%% definite_text(+Text) is semidet. % doc(definite_text/1).
-%% definite_text(?Text) is nondet.
+definite_bytes_t_(Options, X, T) :- definite_bytes_t(X, Options, T).
+
+cbor_bytes_t(len(P, N), X, _, true) :- place_value(P, N), length(X, N), maplist(byte, X).
+cbor_bytes_t(*, X, Options, T) :- reif_andlist(definite_bytes_t_(Options), X, T).
+
+% TODO
+%% definite_text_t(+Text, T) is semidet. % doc(definite_text_t/2).
+%% definite_text_t(?Text, T) is nondet.
 %
 %  `Text` is `text(len(P, N), X)`,
 %  `X` is a list of char
 %  and its underlining represtation uses `N` bytes,
 %  `N` is residing at place `P`,
 %  also `place_value(P, N)` must be true.
-definite_text(text(len(P, N), X)) :- place_value(P, N), chars_utf8bytes(X, L), length(L, N).
+definite_text_t(text(len(P, N), X), T) :- default_options(Options), definite_text_t(text(len(P, N), X), Options, T).
 
-cbor_text(len(P, N), X) :- place_value(P, N), chars_utf8bytes(X, L), length(L, N).
-cbor_text(*, X) :- maplist(definite_text, X).
+definite_text_t(X, Options, T) :-
+  cbor_t(X, Options, _),
+  if_(X = text(L, Ts),
+    cbor_text_t(L, Ts, Options, T),
+    ( T = false, options_nwf(Options, _, _) )
+  ).
 
-cbor_array(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(cbor, X).
+definite_text_t_(Options, X, T) :- definite_text_t(X, Options, T).
 
-cbor_map(L, X) :- lengthindicator_length(L, N), length(X, N), maplist(pair_of_cbor, X).
-pair_of_cbor(Key-Value) :- cbor(Key), cbor(Value).
+cbor_text_t(len(P, N), X, _, true) :- place_value(P, N), chars_utf8bytes(X, L), length(L, N).
+cbor_text_t(*, X, Options, T) :- reif_andlist(definite_text_t_(Options), X, T).
 
-cbor_tag(P, T) :- place_value(P, T).
+cbor_array_t(L, X, Options, T) :- lengthindicator_length(L, N), length(X, N), reif_andlist(cbor_t_(Options), X, T).
 
-cbor_simple(i , X) :- place_value(i , X).
-cbor_simple(x1, X) :- place_value(x1, X), X in 0x20..0xffff.
+cbor_map_t(L, X, Options, T) :- lengthindicator_length(L, N), length(X, N), reif_andlist(pair_of_cbor_t_(Options), X, T).
+pair_of_cbor_t(Key-Value, Options, T) :- ','(cbor_t(Key, Options), cbor_t(Value, Options), T).
+pair_of_cbor_t_(Options, Key-Value, T) :- pair_of_cbor_t(Key-Value, Options, T).
 
-cbor_float(x2, _).
-cbor_float(x4, _).
-cbor_float(x8, _).
+cbor_tag_t(P, T, X, Options, T_) :- place_value(P, T), cbor_t(X, Options, T_).
+
+cbor_simple_t(i , X, _, true) :- place_value(i , X).
+cbor_simple_t(x1, X, Options, T) :-
+  place_value(x1, X),
+  ( X in 0x00..0x1f, options_nwf(Options, _, _), T = false
+  ; X in 0x20..0xff, T = true
+  ).
+
+cbor_float_t(x2, _, _, true).
+cbor_float_t(x4, _, _, true).
+cbor_float_t(x8, _, _, true).
+
+cbor_nwf_t(X, Options, false) :-
+  options_nwf(Options, _, _),
+  cbor_nwf_t_(X, Options).
+
+cbor_nwf_t_( 28, _). cbor_nwf_t_( 29, _). cbor_nwf_t_( 30, _). cbor_nwf_t_( 31, _).
+cbor_nwf_t_( 60, _). cbor_nwf_t_( 61, _). cbor_nwf_t_( 62, _). cbor_nwf_t_( 63, _).
+cbor_nwf_t_( 92, _). cbor_nwf_t_( 93, _). cbor_nwf_t_( 94, _).
+cbor_nwf_t_(124, _). cbor_nwf_t_(125, _). cbor_nwf_t_(126, _).
+cbor_nwf_t_(156, _). cbor_nwf_t_(157, _). cbor_nwf_t_(158, _).
+cbor_nwf_t_(188, _). cbor_nwf_t_(189, _). cbor_nwf_t_(190, _).
+cbor_nwf_t_(220, _). cbor_nwf_t_(221, _). cbor_nwf_t_(222, _). cbor_nwf_t_(223, _).
+cbor_nwf_t_(252, _). cbor_nwf_t_(253, _). cbor_nwf_t_(254, _). cbor_nwf_t_(break, _).
+cbor_nwf_t_(unsigned(P, X), Options) :- cbor_unsigned_t(P, X, Options, _).
+cbor_nwf_t_(negative(P, X), Options) :- cbor_negative_t(P, X, Options, _).
+cbor_nwf_t_(bytes(L, X)   , Options) :- cbor_bytes_t(L, X, Options, _).
+cbor_nwf_t_(text(L, X)    , Options) :- cbor_text_t(L, X, Options, _).
+cbor_nwf_t_(array(L, X)   , Options) :- cbor_array_t(L, X, Options, _).
+cbor_nwf_t_(map(L, X)     , Options) :- cbor_map_t(L, X, Options, _).
+cbor_nwf_t_(tag(P, T, X)  , Options) :- cbor_tag_t(P, T, X, Options, _).
+cbor_nwf_t_(simple(P, X)  , Options) :- cbor_simple_t(P, X, Options, _).
+cbor_nwf_t_(float(P, X)   , Options) :- cbor_float_t(P, X, Options, _).
 
 cbor_pair_(Options, K-V) --> cbor_item_(Options, K), cbor_item_(Options, V).
 
@@ -434,7 +532,7 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %  The default behavior (with `on_nwf(fail)`) is failing.
 %  (For more on this, `see(nwf_cbor/1)`, `see(option/3)`).
 %
-% # Encoding Features
+%  # Encoding Features
 %
 %  Some CBOR Data Items in prolog form
 %  (namely bytes, text, arrays and maps)
@@ -475,7 +573,7 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %       Bytes = [66,0,1], L = len(i,2), Chars = "B\x0\\x1\".
 %  ```
 %
-% # Decoding Features
+%  # Decoding Features
 %
 %  A serialized CBOR Data Item has exactly one
 %  representation in prolog form.
@@ -489,19 +587,19 @@ bytelist([X | Xs], ListOf) --> byte(ListOf, X), bytelist(Xs, ListOf).
 %  and also needs for the CBOR Item not to have
 %  any indefinite Subitems or any not well-formatted.
 %
-% # Map Encoding/Decoding Behavior
+%  # Map Encoding/Decoding Behavior
 %
 %  Maps are translated as is to/from serialized form.
 %  Therefore, there is no sorting of keys,
 %  duplicate-keys check or valitity checks.
 %
-% # Porting Suggestions
+%  # Porting Suggestions
 %
 %  This library was written
 %  with [Scryer Prolog](https://scryer.pl) in mind.
 %  Therefore, it may not work well with other implementations.
 %
-% ## `library(clpz)`
+%  ## `library(clpz)`
 %
 %  If the target implementation does not support
 %  declarative arithmetic,
@@ -535,6 +633,8 @@ cbor_item_(Options, X) --> cbor_item_(Options, X, nobreak).
 cbor_item_(Options, X, B) -->
   cbor_major_value(Major, Value, Options),
   cbor_major_value_x(Major, Value, X, Options, B).
+
+default_options(Options) :- parse_options([], Options).
 
 parse_options(OptList, Options) :-
   must_be(list, OptList),
@@ -580,7 +680,7 @@ finish_parse_option(user(Option), _, Option).
 %
 %  `Options` are options for `cbor_item//2`.
 %  The default values for an option
-%  can be found at `default_option/1`.
+%  can be found at `default_option/2`.
 %
 %  `call(Key, Value)` is true
 %  iff `O =.. [Key, Value]` and
@@ -637,10 +737,10 @@ option(bytes_text      , BT_2  , options(_ListOf,  BT_2, _SIF_3, _On_NWF)).
 option(float_convertion, SIF_3 , options(_ListOf, _BT_2,  SIF_3, _On_NWF)).
 option(on_nwf          , On_NWF, options(_ListOf, _BT_2, _SIF_3,  On_NWF)).
 
-%% default_option(+Option) is semidet. % doc(default_option/1).
-%% default_option(?Option) is nondet.
+%% default_option(+Option, ?Value) is semidet. % doc(default_option/2).
+%% default_option(?Option, ?Value) is nondet.
 %
-%  Is true if `Option` is a default option for `cbor_item//2`.
+%  Is true if `Option(Value)` is a default option for `cbor_item//2`.
 default_option(listOf, char).
 default_option(bytes_text, utf8bytes_chars).
 default_option(float_conversion, size_int_afloat).
@@ -981,11 +1081,6 @@ frac_coef_prec_(F0, C0, P0, C, P) :-
 size_int_int(x2, I, I).
 size_int_int(x4, I, I).
 size_int_int(x8, I, I).
-
-%% nwf_cbor(NWF). % doc(nwf_cbor/1).
-%
-% TODO
-nwf_cbor(_) :- throw(error(existence_error(procedure,nwf_cbor/1),nwf_cbor/1)).
 
 options_nwf(Options, Item, V) :-
   option(on_nwf, On_NWF, Options),

@@ -4,7 +4,7 @@
 
 :- use_module(cbor, [
   cbor/1,
-  nwf_cbor/1,
+  nwf_cbor/2,
   cbor_item//1,
   cbor_item//2
 ]).
@@ -370,14 +370,12 @@ meta_test_rfc8949_decode(In, _, Options, XOut) :-
   phrase(cbor_item(XOut, Options), In).
 
 meta_test_rfc8949_nwf_encode(In, Out, Options) :-
-  % TODO: uncomment when `nwf_cbor/1` is implemented
-  % nwf_cbor(Out),
+  nwf_cbor(Out, Options),
   meta_test_rfc8949_encode(In, Out, Options).
 meta_test_rfc8949_nwf_encode(In, Out, Options, X) :- meta_test_rfc8949_encode(In, Out, Options, X).
 
 meta_test_rfc8949_nwf_decode(In, Out, Options) :-
-  % TODO: uncomment when `nwf_cbor/1` is implemented
-  % nwf_cbor(Out),
+  nwf_cbor(Out, Options),
   meta_test_rfc8949_decode(In, Out, Options).
 meta_test_rfc8949_nwf_decode(In, Out, Options, X) :- meta_test_rfc8949_decode(In, Out, Options, X).
 
