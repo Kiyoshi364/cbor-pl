@@ -27,6 +27,10 @@
 
   CHANGELOG
 
+    [Semantic Versioning](https://semver.org/spec/v2.0.0.html) is implied
+
+    2025-03-?? v0.2      Add `cbor_nwf/2` (with reification)
+                         and change documentation predicates
     2025-02-23 v0.1.1    Add checking for invalid options
     2025-02-18 v0.1      Add afloat abstraction,
                          modify default float handling
